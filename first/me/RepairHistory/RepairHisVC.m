@@ -11,6 +11,8 @@
 #import "RepairDetailVC.h"
 #import "RecordVC.h"
 #import "TZPopInputView.h"
+#import "TableViewAnimationKitHeaders.h"
+
 
 @interface RepairHisVC ()
 <
@@ -66,9 +68,6 @@ UISearchBarDelegate
     _dataArr = [NSMutableArray array];
     
     NSString *userName = [[NSUserDefaults standardUserDefaults] objectForKey:@"userName"];
-    
-    
-    [SVProgressHUD showWithStatus:@"加载中..." maskType:SVProgressHUDMaskTypeGradient];
     
     [self _requestTask:userName];
 }
@@ -135,6 +134,7 @@ UISearchBarDelegate
         self.searchController.dimsBackgroundDuringPresentation      = NO;
         self.searchController.hidesNavigationBarDuringPresentation  = YES;
         self.searchController.searchBar.barTintColor                = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_home_bg"]];
+//        self.searchController.searchBar.searchBarStyle = UISearchBarStyleMinimal;
         self.searchController.searchBar.placeholder                 = @"输入用户号或表身号进行搜索";
         
         self.searchController.searchBar.delegate    = self;
@@ -178,8 +178,6 @@ UISearchBarDelegate
         
         if (responseObject) {
             
-            [SVProgressHUD showInfoWithStatus:@"加载成功"];
-            
             [_tableView.mj_header endRefreshing];
             
             [self.dataArr removeAllObjects];
@@ -194,7 +192,8 @@ UISearchBarDelegate
                 
             }
             
-            [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationAutomatic];
+            [weakSelf.tableView reloadData];
+            [weakSelf starAnimationWithTableView:weakSelf.tableView];
             
         }else {
             
@@ -214,9 +213,9 @@ UISearchBarDelegate
         
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         
-        [SVProgressHUD showErrorWithStatus:@"加载失败"];
+//        [SVProgressHUD showErrorWithStatus:@"加载失败"];
         [_tableView.mj_header endRefreshing];
-        UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"连接失败" message:[NSString stringWithFormat:@"%@", error] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"连接失败" message:[NSString stringWithFormat:@"%@", error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
         
         UIAlertAction *action       = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             
@@ -231,7 +230,10 @@ UISearchBarDelegate
     
     [task resume];
 }
-
+- (void)starAnimationWithTableView:(UITableView *)tableView {
+    
+    [TableViewAnimationKit showWithAnimationType:7 tableView:tableView];
+}
 
 #pragma mark - UITableViewDelegate & UITableViewDataSourse
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {

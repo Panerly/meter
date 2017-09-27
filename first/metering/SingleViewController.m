@@ -110,9 +110,12 @@ static BOOL flag;
     
     //将视图上移计算好的偏移
     if(offset > 0) {
-        [UIView animateWithDuration:duration animations:^{
-            self.view.frame = CGRectMake(0.0f, -offset, self.view.frame.size.width, self.view.frame.size.height);
-        }];
+        if ([_thisPeriodValue isFirstResponder] || [_meteringSituation isFirstResponder] || [_meteringExplain isFirstResponder]) {
+            
+            [UIView animateWithDuration:duration animations:^{
+                self.view.frame = CGRectMake(0.0f, -offset, self.view.frame.size.width, self.view.frame.size.height);
+            }];
+        }
     }
 }
 
@@ -126,8 +129,9 @@ static BOOL flag;
         self.view.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
     }];
 }
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     
     [_thisPeriodValue becomeFirstResponder];
     _thisPeriodValue.delegate = self;

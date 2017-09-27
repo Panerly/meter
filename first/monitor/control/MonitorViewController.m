@@ -729,7 +729,9 @@ UIWebViewDelegate
             button.imageEdgeInsets = UIEdgeInsetsMake(5,13,21,button.titleLabel.bounds.size.width);//设置image在button上的位置（上top，左left，下bottom，右right）这里可以写负值，对上写－5，那么image就象上移动5个像素
             
             [button setTitle:titleArr[i+i+j] forState:UIControlStateNormal];//设置button的title
-            button.titleLabel.font          = [UIFont systemFontOfSize:16];//title字体大小
+//            button.titleLabel.font          = [UIFont systemFontOfSize:16];//title字体大小
+            button.titleLabel.font  = [UIFont fontWithName:@"JXK" size:20];
+            button.titleLabel.adjustsFontSizeToFitWidth = YES;
             button.titleLabel.textAlignment = NSTextAlignmentCenter;//设置title的字体居中
             [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];//设置title在一般情况下为白色字体
             [button setTitleColor:[UIColor grayColor] forState:UIControlStateHighlighted];//设置title在button被选中情况下为灰色字体
@@ -773,7 +775,8 @@ UIWebViewDelegate
 //小表监测平台btn
 - (void)createLitBtn
 {
-    CGFloat width   = PanScreenWidth/5;
+//    CGFloat width   = PanScreenWidth/5;
+    CGFloat width   = self.view.frame.size.width/5+5;
     
     litButton       = [UIButton buttonWithType:UIButtonTypeCustom];//button的类型;
     litBtnArr       = [[NSMutableArray alloc] init];
@@ -799,12 +802,22 @@ UIWebViewDelegate
             litButton.layer.shadowOpacity = .80f;
             
             [litButton setTitle:titleArr[i+i+j] forState:UIControlStateNormal];//设置button的title
+            
             //            litButton.titleLabel.font = [UIFont systemFontOfSize:16];//title字体大小
-            litButton.titleLabel.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:16];
+            
+//            litButton.titleLabel.font = [UIFont fontWithName:@"TimesNewRomanPS-ItalicMT" size:16];
+            
+            litButton.titleLabel.font = [UIFont fontWithName:@"JXK" size:20];
+            
+            litButton.titleLabel.adjustsFontSizeToFitWidth = YES;
+            
+//            [self setFontSizeThatFits:litButton.titleLabel];
+            
             litButton.titleLabel.textAlignment = NSTextAlignmentCenter;//设置title的字体居中
+            
             [litButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];//设置title在一般情况下为白色字体
             [litButton setTitleColor:[UIColor grayColor] forState:UIControlStateHighlighted];//设置title在button被选中情况下为灰色字体
-            litButton.titleEdgeInsets = UIEdgeInsetsMake(110, 0, 0, 0);//设置title在button上的位置（上top，左left，下bottom，右right）
+            litButton.titleEdgeInsets = UIEdgeInsetsMake(125, 0, 0, 0);//设置title在button上的位置（上top，左left，下bottom，右right）
             
             litButton.tag = 200 + i+j+i;
             
@@ -817,6 +830,23 @@ UIWebViewDelegate
         
     }
 }
+
+//- (void)setFontSizeThatFits:(UILabel*)label
+//
+//{
+//    
+//    
+//    CGFloat fontSizeThatFits;
+//    
+//    [label.text sizeWithFont:label.font
+//                 minFontSize:12.0   //最小字体
+//              actualFontSize:&fontSizeThatFits
+//                    forWidth:label.bounds.size.width
+//               lineBreakMode:NSLineBreakByWordWrapping];
+//    
+//    label.font = [label.font fontWithSize:fontSizeThatFits];
+//    
+//}
 
 - (void)clicked:(UIButton *)sender
 {

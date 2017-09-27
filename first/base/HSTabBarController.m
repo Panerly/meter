@@ -95,6 +95,9 @@
                                                        titleHighlightedColor, NSForegroundColorAttributeName,
                                                        nil] forState:UIControlStateSelected];
     
+    [[UITabBarItem appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                       [UIFont fontWithName:@"JXK" size:13], NSFontAttributeName,
+                                                       nil] forState:UIControlStateNormal];
     // 设置标题
     // 相当于同时设置了tabBarItem.title和navigationItem.title
     childVc.title               = title;

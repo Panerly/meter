@@ -549,7 +549,9 @@ UINavigationControllerDelegate
     self.searchController.dimsBackgroundDuringPresentation      = NO;
     self.searchController.hidesNavigationBarDuringPresentation  = YES;
 //    self.searchController.searchBar.barTintColor                = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
-    self.searchController.searchBar.placeholder                 = @"搜索";
+//    self.searchController.searchBar.barTintColor = [UIColor whiteColor];
+//    self.searchController.searchBar.tintColor = [UIColor lightGrayColor];
+    self.searchController.searchBar.searchBarStyle = UISearchBarStyleMinimal;
     
     self.searchController.searchBar.delegate    = self;
     self.searchController.searchResultsUpdater  = self;

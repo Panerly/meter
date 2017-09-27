@@ -7,7 +7,7 @@
 //
 
 #import "ServerViewController.h"
-#import "PayViewController.h"
+#import "CheckViewController.h"
 #import "HelpViewController.h"
 #import "RepairHisVC.h"
 
@@ -25,7 +25,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
+//    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
     
     [self _createBtn];
 }
@@ -122,7 +122,7 @@
 }
 - (void)_createBtn
 {
-    CGFloat width = self.view.frame.size.width/6+15;
+    CGFloat width = self.view.frame.size.width/5+10;
     
     button = [UIButton buttonWithType:UIButtonTypeCustom];//button的类型;
     arr = [[NSMutableArray alloc] init];
@@ -135,10 +135,10 @@
         
         for (int j = 0; j < titleArr.count-i-j; j++) {
             
-            if (j == 0) {
-                
-                button = [[UIButton alloc] initWithFrame:CGRectMake(PanScreenWidth/2 * i + PanScreenWidth/8, 80, width, width)];
-            }else
+//            if (j == 0) {
+//                
+//                button = [[UIButton alloc] initWithFrame:CGRectMake(PanScreenWidth/2 * i + PanScreenWidth/8, 80, width, width)];
+//            }else
             button = [[UIButton alloc] initWithFrame:CGRectMake(PanScreenWidth/2 * i + PanScreenWidth/8, width *(j+1) + (j*40)+10, width, width)];
 
             [button setBackgroundImage:[UIImage imageNamed:imageArr[i+j+j]] forState:UIControlStateNormal];
@@ -148,9 +148,11 @@
             button.imageEdgeInsets = UIEdgeInsetsMake(5,13,21,button.titleLabel.bounds.size.width);//设置image在button上的位置（上top，左left，下bottom，右right）这里可以写负值，对上写－5，那么image就象上移动5个像素
             
             [button setTitle:titleArr[i+j+j] forState:UIControlStateNormal];//设置button的title
-            button.titleLabel.font = [UIFont systemFontOfSize:16];//title字体大小
+//            button.titleLabel.font = [UIFont systemFontOfSize:16];//title字体大小
+            button.titleLabel.font = [UIFont fontWithName:@"JXK" size:20];
+            button.titleLabel.adjustsFontSizeToFitWidth = YES;
             button.titleLabel.textAlignment = NSTextAlignmentCenter;//设置title的字体居中
-            [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];//设置title在一般情况下为白色字体
+            [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];//设置title在一般情况下为白色字体
             [button setTitleColor:[UIColor grayColor] forState:UIControlStateHighlighted];//设置title在button被选中情况下为灰色字体
             button.titleEdgeInsets = UIEdgeInsetsMake(110, -button.titleLabel.bounds.size.width, 0, 0);//设置title在button上的位置（上top，左left，下bottom，右right）
             
@@ -210,6 +212,10 @@
     
     repairHisVC.hidesBottomBarWhenPushed = YES;
     
+    CheckViewController *checkVC = [[CheckViewController alloc] init];
+    
+    checkVC.hidesBottomBarWhenPushed = YES;
+    
     switch (sender.tag) {
             
         case 200:
@@ -248,9 +254,10 @@
             break;
             
         case 205:
-            [alertVC addAction:action];
-            [self presentViewController:alertVC animated:YES completion:^{
-            }];
+//            [alertVC addAction:action];
+//            [self presentViewController:alertVC animated:YES completion:^{
+//            }];
+            
             //            [self.navigationController showViewController:pay sender:nil];
 //            if (![[[NSUserDefaults standardUserDefaults] objectForKey:@"purview"] isEqualToString:@"5"]){//此功能仅限外复人员使用
 //                
@@ -262,6 +269,7 @@
 //                    
 //                }];
 //            }
+            [self.navigationController showViewController:checkVC sender:nil];
             break;
             
         default:

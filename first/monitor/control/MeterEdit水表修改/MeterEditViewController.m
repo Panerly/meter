@@ -115,11 +115,23 @@ static int i = 0;
                 [_numArray addObject:[numDic objectForKey:@"num"]];
             }
             
-            [_excessiveSwitchBtn setOn:[[alarmNsetList objectAtIndex:0] isEqualToString:@"0"] ? NO : YES];
-            [_reversalSwitchBtn setOn:[[alarmNsetList objectAtIndex:2]isEqualToString:@"0"] ? NO : YES];
-            [_longTimeNotServerSwitchBtn setOn:[[alarmNsetList objectAtIndex:3]isEqualToString:@"0"] ? NO : YES];
-            [_limitOfDayUsageSwitchBtn setOn:[[alarmNsetList objectAtIndex:4]isEqualToString:@"0"] ? NO : YES];
-            [_longtimeNotUseSwitchBtn setOn:[[alarmNsetList objectAtIndex:1]isEqualToString:@"0"] ? NO : YES];
+            if (alarmNsetList.count == 0) {
+                
+                [_excessiveSwitchBtn setOn:NO];
+                [_reversalSwitchBtn setOn:NO];
+                [_longTimeNotServerSwitchBtn setOn:NO];
+                [_limitOfDayUsageSwitchBtn setOn:NO];
+                [_longtimeNotUseSwitchBtn setOn:NO];
+                [_limitOfUsageSwitchBtn setOn:NO];
+                [_fromToSwitchBtn setOn:NO];
+            }else{
+                
+                [_excessiveSwitchBtn setOn:[[alarmNsetList objectAtIndex:0] isEqualToString:@"0"] ? NO : YES];
+                [_reversalSwitchBtn setOn:[[alarmNsetList objectAtIndex:2]isEqualToString:@"0"] ? NO : YES];
+                [_longTimeNotServerSwitchBtn setOn:[[alarmNsetList objectAtIndex:3]isEqualToString:@"0"] ? NO : YES];
+                [_limitOfDayUsageSwitchBtn setOn:[[alarmNsetList objectAtIndex:4]isEqualToString:@"0"] ? NO : YES];
+                [_longtimeNotUseSwitchBtn setOn:[[alarmNsetList objectAtIndex:1]isEqualToString:@"0"] ? NO : YES];
+            }
             
 #pragma mark - diff db got diff count but at least 5
             if (alarmNsetList.count>5) {
@@ -207,7 +219,7 @@ static int i = 0;
     [_saveBtn addTarget:self action:@selector(saveBtn) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_saveBtn];
     [_saveBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.bottom.equalTo(self.view.mas_bottom).with.offset(-59);
+        make.bottom.equalTo(self.view.mas_bottom).with.offset(-10);
         make.right.equalTo(self.view.mas_right).with.offset(-10);
         make.size.equalTo(CGSizeMake(55, 55));
     }];
@@ -311,14 +323,15 @@ static int i = 0;
     [_userID mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(_scrollView.mas_top).with.offset(15);
         make.left.equalTo(_scrollView.mas_left).with.offset(10);
-        make.size.equalTo(CGSizeMake(150, 25));
+        make.size.equalTo(CGSizeMake(PanScreenWidth/2, 25));
     }];
     
     _meterID.text = @"表位号: ";
     [_meterID mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(_scrollView.mas_top).with.offset(15);
-        make.centerX.equalTo(_scrollView.centerX).with.offset(50);
-        make.size.equalTo(CGSizeMake(150, 25));
+//        make.centerX.equalTo(_scrollView.centerX).with.offset(50);
+        make.left.equalTo(_userID.mas_right).with.offset(5);
+        make.size.equalTo(CGSizeMake(PanScreenWidth/2, 25));
     }];
     
     _installAddrLabel.text = @"安装地址: ";
@@ -912,6 +925,24 @@ static int i = 0;
 //    NSMutableArray *alarmIsNullArray = [NSMutableArray arrayWithObjects:arr,sevenT, nil];
 //    NSLog(@"最终---%@",alarmIsNullArray);
     
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确定提交修改数据？" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+    __weak typeof(self)weakSelf = self;
+    UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [weakSelf uploadFixData];
+    }];
+    [alert addAction:cancelAction];
+    [alert addAction:confirmAction];
+    [self presentViewController:alert animated:YES completion:^{
+        
+    }];
+    
+    return nil;
+}
+
+- (void)uploadFixData {
+    
     [SCToastView showInView:[UIApplication sharedApplication].keyWindow text:@"正在保存..." duration:2 autoHide:YES];
     NSString *logInUrl = [NSString stringWithFormat:@"http://%@/waterweb/EditServlet1",self.ipLabel];
     AFHTTPSessionManager *manager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
@@ -960,7 +991,7 @@ static int i = 0;
         }
         
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-
+        
         [SCToastView showInView:[UIApplication sharedApplication].keyWindow text:@"保存失败" duration:2 autoHide:YES];
         
         UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:[NSString stringWithFormat:@"错误信息：%@",error] preferredStyle:UIAlertControllerStyleAlert];
@@ -975,9 +1006,8 @@ static int i = 0;
         }];
         
     }];
-
+    
     [task resume];
-    return nil;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
