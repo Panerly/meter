@@ -345,7 +345,7 @@ static BOOL flag;
                 UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:@"本期抄表值不能低于上期抄收值！" preferredStyle:UIAlertControllerStyleAlert];
                 [alertVC addAction:action];
                 [self presentViewController:alertVC animated:YES completion:^{
-                    
+                    [AnimationView dismiss];
                 }];
             }else {//通过水表逆流监测 开始上传
                 
@@ -386,6 +386,14 @@ static BOOL flag;
         }];
     }
 }
+
+//报修
+- (IBAction)reportAction:(id)sender {
+    
+    
+}
+
+
 
 //保存到本地数据库
 - (IBAction)saveToLocal:(id)sender {
@@ -637,20 +645,42 @@ static BOOL flag;
 
 //获取成功后赋值
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(nullable NSDictionary<NSString *,id> *)editingInfo {
+    
+    //获取系统当前时间
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd hh:mm:ss"];
+    NSString *currentTime      = [formatter stringFromDate:[NSDate date]];
+    NSString *attachingString = [NSString stringWithFormat:@"%@\n%@",currentTime,self.user_name];
+    
+    
     if (num == 300) {
-        
-        self.firstImage.image = image;
+        self.firstImage.image = [self addWatemarkTextAfteriOS7_WithLogoImage:image watemarkText:attachingString];
     }
     if (num == 301) {
-        self.secondImage.image = image;
+        self.secondImage.image = [self addWatemarkTextAfteriOS7_WithLogoImage:image watemarkText:attachingString];
         
     }
     if (num == 302) {
-        self.thirdImage.image = image;
+        self.thirdImage.image = [self addWatemarkTextAfteriOS7_WithLogoImage:image watemarkText:attachingString];
         
     }
     [self dismissViewControllerAnimated:YES completion:nil];
 }
+//添加水印信息
+- (UIImage *)addWatemarkTextAfteriOS7_WithLogoImage:(UIImage *)logoImage watemarkText:(NSString *)watemarkText{
+    int w = logoImage.size.width;
+    int h = logoImage.size.height;
+    UIGraphicsBeginImageContext(logoImage.size);
+    [[UIColor redColor] set];
+    [logoImage drawInRect:CGRectMake(0, 0, w, h)];
+    UIFont * font = [UIFont systemFontOfSize:18.0];
+    [watemarkText drawInRect:CGRectMake(10, 55, 130, 80) withAttributes:@{NSFontAttributeName:font,NSForegroundColorAttributeName:[UIColor redColor]}];
+    UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
+
 - (IBAction)meterStatuesBtn:(UIButton *)sender {
     [FTPopOverMenu showForSender:sender withMenuArray:@[@"正常",@"水表破损",@"水表倒装",@"人工估表",@"水表停走",@"周检换表",@"用水异常"] imageArray:@[@"icon_normal",@"icon_demage",@"icon_reversal",@"icon_compute",@"icon_meter_stop",@"icon_changemeter",@"icon_abnormal"] doneBlock:^(NSInteger selectedIndex) {
         

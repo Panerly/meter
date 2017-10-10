@@ -64,14 +64,18 @@ AVCaptureMetadataOutputObjectsDelegate
     if ([_mterConditionTextField isFirstResponder]) {
         
         offset = (_mterConditionTextField.frame.origin.y+_mterConditionTextField.frame.size.height+10) - (self.view.frame.size.height - kbHeight);
+    }else if([_meterNumTextField isFirstResponder]){
+        
+        offset = (_meterNumTextField.frame.origin.y+_meterNumTextField.frame.size.height+10) - (self.view.frame.size.height - kbHeight);
     }else{
+        
         offset = (_remarkTextView.frame.origin.y+_remarkTextView.frame.size.height+10) - (self.view.frame.size.height - kbHeight);
     }
     
     // 取得键盘的动画时间，这样可以在视图上移的时候更连贯
     double duration = [[notification.userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    if ([_mterConditionTextField isFirstResponder] || [_remarkTextView isFirstResponder]) {
+    if ([_mterConditionTextField isFirstResponder] || [_remarkTextView isFirstResponder] || [_meterNumTextField isFirstResponder]) {
         
         //将视图上移计算好的偏移
         if(offset > 0) {
@@ -104,6 +108,7 @@ AVCaptureMetadataOutputObjectsDelegate
 //    
 //    _mterConditionTextField.returnKeyType = UIReturnKeyDone;
 //    _remarkTextView.returnKeyType         = UIReturnKeyDone;
+    _meterNumTextField.keyboardType = UIKeyboardTypeNumberPad;
 }
 
 //- (void)textFieldDidBeginEditing:(UITextField *)textField {
@@ -194,6 +199,7 @@ AVCaptureMetadataOutputObjectsDelegate
     }
     [self dismissViewControllerAnimated:YES completion:nil];
 }
+
 - (IBAction)selectCondition:(id)sender {
     
     NSArray *multipleAssociatedData = @[// 数组
@@ -208,7 +214,7 @@ AVCaptureMetadataOutputObjectsDelegate
                                             @"正常": @[@"正常"],
                                             @"估表": @[@"估值：120", @"估值：130", @"估值：140"],
                                             @"故障": @[@"水表破损", @"电缆损坏"],
-                                            @"无量": @[@""]
+                                            @"无量": @[@"无用量"]
                                             
                                             }
                                         
@@ -233,6 +239,7 @@ AVCaptureMetadataOutputObjectsDelegate
     [_userAddrTextfield resignFirstResponder];
     [_mterConditionTextField resignFirstResponder];
     [_remarkTextView resignFirstResponder];
+    [_meterNumTextField resignFirstResponder];
 }
 
 @end

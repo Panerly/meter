@@ -94,7 +94,6 @@
 		38A5935C1EFA196F008FE61A /* TimeLineViewControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 38A5935B1EFA196F008FE61A /* TimeLineViewControl.m */; };
 		38AF70C31F7A3D8000C6AF66 /* TableViewAnimationKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 38AF70BE1F7A3D8000C6AF66 /* TableViewAnimationKit.m */; };
 		38AF70C41F7A3D8000C6AF66 /* UITableView+XSAnimationKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 38AF70C21F7A3D8000C6AF66 /* UITableView+XSAnimationKit.m */; };
-		38AF70C71F7A43B800C6AF66 /* am.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 38AF70C61F7A43B800C6AF66 /* am.ttf */; };
 		38B0D7571F67A42400DC958B /* icon_danger.png in Resources */ = {isa = PBXBuildFile; fileRef = 38B0D7561F67A42400DC958B /* icon_danger.png */; };
 		38B0D7591F67A4C500DC958B /* icon_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 38B0D7581F67A4C400DC958B /* icon_normal.png */; };
 		38B0D75B1F67AFDA00DC958B /* icon_bg.png in Resources */ = {isa = PBXBuildFile; fileRef = 38B0D75A1F67AFDA00DC958B /* icon_bg.png */; };
@@ -695,7 +694,6 @@
 		383FF4161F7A8AAF0012AC8F /* save2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "save2@2x.png"; sourceTree = "<group>"; };
 		38459C3D1F6A0DAC0069E54B /* PressureModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PressureModel.h; sourceTree = "<group>"; };
 		38459C3E1F6A0DAC0069E54B /* PressureModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PressureModel.m; sourceTree = "<group>"; };
-		384A136D1F7A453500D7A126 /* am.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = am.ttf; path = first/font/am.ttf; sourceTree = "<group>"; };
 		384A136E1F7A47DA00D7A126 /* JXK.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = JXK.ttf; sourceTree = "<group>"; };
 		384A13701F7A483100D7A126 /* JXK.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = JXK.ttf; path = first/font/JXK.ttf; sourceTree = "<group>"; };
 		3864C8821EA85429004EA57A /* WYLineChartBackgroundView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WYLineChartBackgroundView.h; sourceTree = "<group>"; };
@@ -3296,7 +3294,6 @@
 			isa = PBXGroup;
 			children = (
 				384A13701F7A483100D7A126 /* JXK.ttf */,
-				384A136D1F7A453500D7A126 /* am.ttf */,
 				45A544B81EC97C70000328B9 /* 杭州水表.entitlements */,
 				4521A9CA1D5830D4003BCDDB /* framework */,
 				45978D601CED7E6400BF3C0E /* first */,
@@ -4283,7 +4280,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				384A136F1F7A47DA00D7A126 /* JXK.ttf in Resources */,
-				38AF70C71F7A43B800C6AF66 /* am.ttf in Resources */,
 				450BA6E51E8E325D00CDA23E /* 多云.gif in Resources */,
 				45991AF61ECD3D95008ACA4E /* snow.png in Resources */,
 				450BA6C11E8CA3F500CDA23E /* 雷阵雨.png in Resources */,

@@ -302,7 +302,7 @@ const float VIEW_WIDTH = 225.0;
             animation.fromValue = [NSNumber numberWithFloat:0.0f];
             animation.toValue   = [NSNumber numberWithFloat:1.0f];
             animation.fillMode = kCAFillModeForwards;
-            animation.delegate = self;
+            animation.delegate = (id)self;
             circleTimeOffset += .4;
             [cilrclLayer setHidden:YES];
             [cilrclLayer addAnimation:animation forKey:@"strokeCircleAnimation"];

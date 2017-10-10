@@ -27,5 +27,6 @@
 @property (weak, nonatomic) IBOutlet UIImageView *firstImg;
 @property (weak, nonatomic) IBOutlet UIImageView *secondImg;
 @property (weak, nonatomic) IBOutlet UIImageView *thirdImg;
+@property (weak, nonatomic) IBOutlet UITextField *meterNumTextField;
 
 @end

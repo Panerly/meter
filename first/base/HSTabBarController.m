@@ -62,7 +62,7 @@
     [self addOneChlildVc:setting title:@"设置" imageName:@"me@3x" selectedImageName:@"me_selected@3x"];
 }
 
-//登录缩放动画
+//缩放动画
 - (void)animationWithView:(UIView *)view duration:(CFTimeInterval)duration{
     
     CAKeyframeAnimation * animation;

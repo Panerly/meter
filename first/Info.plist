@@ -113,7 +113,6 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>JXK.ttf</string>
-		<string>am.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
