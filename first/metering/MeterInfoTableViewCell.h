@@ -8,6 +8,18 @@
 
 #import <UIKit/UIKit.h>
 #import "MeterInfoModel.h"
+
+
+@protocol MetercellDelegate <NSObject>
+
+@optional
+
+-(void)didClickButton:(UIButton *)button X:(NSString *)x Y:(NSString *)y;
+
+@end
+
+
+
 @interface MeterInfoTableViewCell : UITableViewCell
 
 //所属小区
@@ -20,5 +32,8 @@
 @property (nonatomic, strong) NSString *x;
 @property (nonatomic, strong) NSString *y;
 @property (weak, nonatomic) IBOutlet UILabel *num;
+
+
+@property(nonatomic,weak) id<MetercellDelegate> delegate;
 
 @end

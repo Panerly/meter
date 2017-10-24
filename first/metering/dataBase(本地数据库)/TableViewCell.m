@@ -17,7 +17,8 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    self.meter_id.text = [NSString stringWithFormat:@"户号:%@",self.DBModel.meter_id];
+    
+    self.meter_id.text = [NSString stringWithFormat:@"客户编号:%@",self.DBModel.meter_id];
     self.user_id.text  = [NSString stringWithFormat:@"地址:%@",self.DBModel.user_addr];
 }
 

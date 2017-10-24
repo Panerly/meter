@@ -20,19 +20,23 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     
-    if (self.completeModel.collect_num) {
-        self.meter_id.text = [NSString stringWithFormat:@"本期抄收值： %@ m³",self.completeModel.collect_num];
+    if (self.completeModel.i_ChaoMa) {
+        
+        self.meter_id.text = [NSString stringWithFormat:@"本期抄收值： %@ m³",self.completeModel.i_ChaoMa];
     }
-    if (self.completeModel.user_id) {
-        self.user_id.text = [NSString stringWithFormat:@"%@",self.completeModel.user_id];
+    if (self.completeModel.s_DiZhi) {
+        
+        self.user_id.text = [NSString stringWithFormat:@"%@",self.completeModel.s_DiZhi];
     }
-    if (self.completeModel.collect_time) {
-        self.collect_time.text = [NSString stringWithFormat:@"抄表时间：%@",self.completeModel.collect_time];
+    if (self.completeModel.d_ChaoBiao) {
+        
+        self.collect_time.text = [NSString stringWithFormat:@"抄表时间：%@",self.completeModel.d_ChaoBiao];
     }
-    if (self.completeModel.image) {
-        self.compImage.image = self.completeModel.image;
+    if (self.completeModel.s_PhotoFile) {
+        
+        self.compImage.image = self.completeModel.s_PhotoFile;
     }
-    _click = self.completeModel.user_id;
+    _click = self.completeModel.s_DiZhi;
     
     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
     
@@ -73,21 +77,24 @@
     
     NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
-    NSLog(@"大表数据库路径%@",fileName);
+
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     [db open];
-    [db executeUpdate:[NSString stringWithFormat:@"delete from meter_complete where user_id = '%@'",_click]];
+    [db executeUpdate:[NSString stringWithFormat:@"delete from Reading_now where s_DiZhi = '%@'",_click]];
     
-    FMResultSet *restultSet = [db executeQuery:@"SELECT * FROM meter_complete order by user_id"];
+    FMResultSet *restultSet = [db executeQuery:@"SELECT * FROM Reading_now order by id"];
     [((CompleteViewController *)[self findVC]).dataArr removeAllObjects];
+    
     while ([restultSet next]) {
         
-        NSString *meter_id  = [restultSet stringForColumn:@"meter_id"];
-        NSString *user_id   = [restultSet stringForColumn:@"user_id"];
+        NSString *i_ChaoMa  = [restultSet stringForColumn:@"i_ChaoMa"];
+        NSString *s_DiZhi   = [restultSet stringForColumn:@"s_DiZhi"];
+        NSString *d_ChaoBiao = [restultSet stringForColumn:@"d_ChaoBiao"];
 
         CompleteModel *completeModel    = [[CompleteModel alloc] init];
-        completeModel.meter_id          = [NSString stringWithFormat:@"%@",meter_id];
-        completeModel.user_id           = [NSString stringWithFormat:@"%@",user_id];
+        completeModel.i_ChaoMa          = [NSString stringWithFormat:@"%@", i_ChaoMa];
+        completeModel.s_DiZhi           = [NSString stringWithFormat:@"%@", s_DiZhi];
+        completeModel.d_ChaoBiao        = [NSString stringWithFormat:@"%@", d_ChaoBiao];
         [((CompleteViewController *)[self findVC]).dataArr addObject:completeModel];
     }
     [db close];

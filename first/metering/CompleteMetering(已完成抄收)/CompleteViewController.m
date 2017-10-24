@@ -40,7 +40,9 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     self.title = @"已完成";
     
     [self createTableView];
+    
     [self setUploadAndselectBtn];
+    
     [self setSegmentedCtrl];
     
     self.uploadArr = [NSMutableArray array];
@@ -83,6 +85,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
 - (void)uploadClick:(UIButton *) button {
     
     if (self.tableView.editing) {
+        
         [self uploadDB];
     }
     else return;
@@ -195,6 +198,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
  */
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    
     [self createDB];
     [self updateDB];
 }
@@ -203,48 +207,43 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
 - (void)updateDB {
     [self.db open];
     
-    FMResultSet *resultSet = [self.db executeQuery:@"SELECT * FROM meter_complete where collect_area != '00' order by user_id"];
+    FMResultSet *resultSet = [self.db executeQuery:@"SELECT * FROM Reading_now where s_bookNo != '0' and bs = '2' order by id"];
     
     _dataArr = [NSMutableArray array];
     [_dataArr removeAllObjects];
     
     while ([resultSet next]) {
         
-        NSString *meter_id          = [resultSet stringForColumn:@"meter_id"];
-        NSString *user_id           = [resultSet stringForColumn:@"user_id"];
-        NSString *collect_time      = [resultSet stringForColumn:@"collect_time"];
-        NSString *remark            = [resultSet stringForColumn:@"remark"];
-        NSString *collecTime        = [resultSet stringForColumn:@"collect_time"];
-        NSString *collect_num       = [resultSet stringForColumn:@"collect_num"];
-        NSString *user_name         = [resultSet stringForColumn:@"user_name"];
-        NSString *collect_area      = [resultSet stringForColumn:@"collect_area"];
-        NSString *install_addr      = [resultSet stringForColumn:@"install_addr"];
-        NSString *collect_avg       = [resultSet stringForColumn:@"collect_avg"];
-        NSString *metering_status   = [resultSet stringForColumn:@"metering_status"];
-        NSString *x                 = [resultSet stringForColumn:@"x"];
-        NSString *y                 = [resultSet stringForColumn:@"y"];
+        NSString *bs            = [resultSet stringForColumn:@"bs"];//标示 0未抄收 1已上传 2已抄收
+        NSString *s_CID         = [resultSet stringForColumn:@"s_CID"];//客户编号
+        NSString *s_DiZhi       = [resultSet stringForColumn:@"s_DiZhi"];
+        NSString *i_ChaoMa      = [resultSet stringForColumn:@"i_ChaoMa"];//本次抄码值
+        NSString *d_ChaoBiao    = [resultSet stringForColumn:@"d_ChaoBiao"];//本次抄表时间
+        NSString *i_MarkingMode = [resultSet stringForColumn:@"i_MarkingMode"];//录入标示
+        NSString *i_BiaoZhuangTai       = [resultSet stringForColumn:@"i_BiaoZhuangTai"];//表状态
+        NSString *i_Shuiliang_ChaoJian  = [resultSet stringForColumn:@"i_ShuiLiang_ChaoJian"];//本次用水量
         
-        NSData *first_image  = [resultSet dataForColumn:@"Collect_img_name1"];
-        NSData *second_image = [resultSet dataForColumn:@"Collect_img_name2"];
-        NSData *third_image  = [resultSet dataForColumn:@"Collect_img_name3"];
+        NSString *imageStr1 = [resultSet stringForColumn:@"s_PhotoFile"];
+        NSString *imageStr2 = [resultSet stringForColumn:@"s_PhotoFile2"];
+        NSString *imageStr3 = [resultSet stringForColumn:@"s_PhotoFile3"];
+        NSData *imageData1 = [[NSData alloc] initWithBase64EncodedString:imageStr1 options:1];
+        NSData *imageData2 = [[NSData alloc] initWithBase64EncodedString:imageStr2 options:1];
+        NSData *imageData3 = [[NSData alloc] initWithBase64EncodedString:imageStr3 options:1];
+        
         
         CompleteModel *completeModel    = [[CompleteModel alloc] init];
-        completeModel.meter_id          = [NSString stringWithFormat:@"%@",meter_id];
-        completeModel.user_id           =[NSString stringWithFormat:@"%@",user_id];
-        completeModel.collect_time      = collecTime;
-        completeModel.remark            = remark;
-        completeModel.collect_num       = collect_num;
-        completeModel.user_name         = user_name;
-        completeModel.collect_area      = collect_area;
-        completeModel.install_addr      = install_addr;
-        completeModel.collect_avg       = collect_avg;
-        completeModel.metering_status   = metering_status;
-        completeModel.x                 = x;
-        completeModel.y                 = y;
-        completeModel.collect_time      = [NSString stringWithFormat:@"%@",collect_time];
-        completeModel.image             = [UIImage imageWithData:first_image];
-        completeModel.second_img        = [UIImage imageWithData:second_image];
-        completeModel.third_img         = [UIImage imageWithData:third_image];
+        completeModel.bs            = bs;
+        completeModel.s_CID         = [NSString stringWithFormat:@"%@",s_CID];
+        completeModel.s_DiZhi       = s_DiZhi;
+        completeModel.i_ChaoMa      = i_ChaoMa;
+        completeModel.d_ChaoBiao    = d_ChaoBiao;
+        completeModel.i_MarkingMode         =[NSString stringWithFormat:@"%@",i_MarkingMode];
+        completeModel.i_BiaoZhuangTai       = i_BiaoZhuangTai;
+        completeModel.i_ShuiLiang_ChaoJian  = i_Shuiliang_ChaoJian;
+        
+        completeModel.s_PhotoFile           = [UIImage imageWithData:imageData1];
+        completeModel.s_PhotoFile2          = [UIImage imageWithData:imageData2];
+        completeModel.s_PhotoFile3          = [UIImage imageWithData:imageData3];
         
         [self.dataArr addObject:completeModel];
 
@@ -269,70 +268,71 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
 }
 
 - (void)showAlertLabel {
+    
     if (!alertLabel) {
         
         alertLabel                  = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 150, 30)];
         alertLabel.text             = @"暂无抄收数据";
+        alertLabel.center           = self.view.center;
         alertLabel.textColor        = [UIColor lightGrayColor];
         alertLabel.textAlignment    = NSTextAlignmentCenter;
-        alertLabel.center           = self.view.center;
         [self.view addSubview:alertLabel];
     }
 }
 
 - (void)updateBigMeterDB {
+    
     [self.db open];
     
-    FMResultSet *resultSet = [self.db executeQuery:@"SELECT * FROM meter_complete where collect_area = '00' order by user_id"];
+    FMResultSet *resultSet = [self.db executeQuery:@"SSELECT * FROM Reading_now where s_bookNo = '0' and bs = '2' order by id"];
     
     _dataArr               = [NSMutableArray array];
     [_dataArr removeAllObjects];
     
     while ([resultSet next]) {
         
-        NSString *meter_id        = [resultSet stringForColumn:@"meter_id"];
-        NSString *user_id         = [resultSet stringForColumn:@"user_id"];
-        NSString *remark          = [resultSet stringForColumn:@"remark"];
-        NSString *collecTime      = [resultSet stringForColumn:@"collect_time"];
-        NSString *collect_num     = [resultSet stringForColumn:@"collect_num"];
-        NSString *user_name       = [resultSet stringForColumn:@"user_name"];
-        NSString *collect_area    = [resultSet stringForColumn:@"collect_area"];
-        NSString *install_addr    = [resultSet stringForColumn:@"install_addr"];
-        NSString *collect_avg     = [resultSet stringForColumn:@"collect_avg"];
-        NSString *metering_status = [resultSet stringForColumn:@"metering_status"];
-        NSString *x               = [resultSet stringForColumn:@"x"];
-        NSString *y               = [resultSet stringForColumn:@"y"];
+        NSString *bs            = [resultSet stringForColumn:@"bs"];//标示 0未抄收 1已上传 2已抄收
+        NSString *s_CID         = [resultSet stringForColumn:@"s_CID"];//客户编号
+        NSString *s_DiZhi       = [resultSet stringForColumn:@"s_DiZhi"];
+        NSString *i_ChaoMa      = [resultSet stringForColumn:@"i_ChaoMa"];//本次抄码值
+        NSString *d_ChaoBiao    = [resultSet stringForColumn:@"d_ChaoBiao"];//本次抄表时间
+        NSString *i_MarkingMode = [resultSet stringForColumn:@"i_MarkingMode"];//录入标示
+        NSString *i_BiaoZhuangTai       = [resultSet stringForColumn:@"i_BiaoZhuangTai"];//表状态
+        NSString *i_Shuiliang_ChaoJian  = [resultSet stringForColumn:@"i_ShuiLiang_ChaoJian"];//本次用水量
         
-        NSData *first_image       = [resultSet dataForColumn:@"Collect_img_name1"];
-        NSData *second_image      = [resultSet dataForColumn:@"Collect_img_name2"];
-        NSData *third_image       = [resultSet dataForColumn:@"Collect_img_name3"];
+        NSString *imageStr1 = [resultSet stringForColumn:@"s_PhotoFile"];
+        NSString *imageStr2 = [resultSet stringForColumn:@"s_PhotoFile2"];
+        NSString *imageStr3 = [resultSet stringForColumn:@"s_PhotoFile3"];
+        NSData *imageData1 = [[NSData alloc] initWithBase64EncodedString:imageStr1 options:1];
+        NSData *imageData2 = [[NSData alloc] initWithBase64EncodedString:imageStr2 options:1];
+        NSData *imageData3 = [[NSData alloc] initWithBase64EncodedString:imageStr3 options:1];
         
-        CompleteModel *completeModel  = [[CompleteModel alloc] init];
-        completeModel.meter_id        = [NSString stringWithFormat:@"%@",meter_id];
-        completeModel.user_id         =[NSString stringWithFormat:@"%@",user_id];
-        completeModel.collect_time    = collecTime;
-        completeModel.remark          = remark;
-        completeModel.collect_num     = collect_num;
-        completeModel.user_name       = user_name;
-        completeModel.collect_area    = collect_area;
-        completeModel.install_addr    = install_addr;
-        completeModel.collect_avg     = collect_avg;
-        completeModel.metering_status = metering_status;
-        completeModel.x               = x;
-        completeModel.y               = y;
-        completeModel.image           = [UIImage imageWithData:first_image];
-        completeModel.second_img      = [UIImage imageWithData:second_image];
-        completeModel.third_img       = [UIImage imageWithData:third_image];
-        [_dataArr addObject:completeModel];
+        CompleteModel *completeModel    = [[CompleteModel alloc] init];
+        completeModel.bs            = bs;
+        completeModel.s_CID         = [NSString stringWithFormat:@"%@",s_CID];
+        completeModel.s_DiZhi       = s_DiZhi;
+        completeModel.i_ChaoMa      = i_ChaoMa;
+        completeModel.d_ChaoBiao    = d_ChaoBiao;
+        completeModel.i_MarkingMode         =[NSString stringWithFormat:@"%@",i_MarkingMode];
+        completeModel.i_BiaoZhuangTai       = i_BiaoZhuangTai;
+        completeModel.i_ShuiLiang_ChaoJian  = i_Shuiliang_ChaoJian;
+        
+        completeModel.s_PhotoFile           = [UIImage imageWithData:imageData1];
+        completeModel.s_PhotoFile2          = [UIImage imageWithData:imageData2];
+        completeModel.s_PhotoFile3          = [UIImage imageWithData:imageData3];
+        
+        [self.dataArr addObject:completeModel];
     }
     
     if (self.dataArr.count != 0) {
 
         if (alertLabel) {
+            
             [alertLabel removeFromSuperview];
             alertLabel = nil;
         }
     }else{
+        
         if (!alertLabel) {
             
             [self showAlertLabel];
@@ -345,6 +345,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
 
 //连接数据库
 - (void)createDB {
+    
     NSString *doc      = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
     
@@ -354,6 +355,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
 
 
 - (void)createTableView {
+    
     _tableView                 = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight) style:UITableViewStylePlain];
     _tableView.delegate        = self;
     _tableView.dataSource      = self;
@@ -424,6 +426,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     
     return cell;
 }
+
 //-(void)longPressedAct:(UILongPressGestureRecognizer *)gesture
 //{
 //    if(gesture.state == UIGestureRecognizerStateBegan) {
@@ -449,8 +452,16 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     
     [AnimationView showInView:self.view];
     
+    NSString *ip;
+    if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"] isEqualToString:@"001"]) {
+        
+        ip = @"58.211.253.180:8000";
+    }else{
+        
+        ip = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"];
+    }
     
-    NSString *uploadUrl                = [NSString stringWithFormat:@"%@/Meter_Reading/Reading_nowServlet1",litMeterApi];
+    NSString *uploadUrl                = [NSString stringWithFormat:@"http://%@/Meter_Reading/Reading_nowServlet1",ip];
     
     AFSecurityPolicy *securityPolicy   = [[AFSecurityPolicy alloc] init];
     [securityPolicy setAllowInvalidCertificates:YES];
@@ -463,7 +474,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     
     NSMutableArray *install_addr_arr   = [NSMutableArray arrayWithCapacity:_uploadArr.count];
     
-    NSMutableDictionary *paraDic       = [NSMutableDictionary dictionaryWithCapacity:_uploadArr.count];
+    
     NSMutableArray *paraArr            = [NSMutableArray arrayWithCapacity:_uploadArr.count];
     NSMutableArray *imageArr           = [NSMutableArray array];
 
@@ -472,10 +483,10 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     //将有照片的户的地址存起来
     for (int i = 0; i < _uploadArr.count; i++) {
         
-        if (((CompleteModel *)_uploadArr[i]).image) {
+        if (((CompleteModel *)_uploadArr[i]).s_PhotoFile) {
         
-            //通过安装地址删除本地库信息（上传成功的话）
-            [imageArr addObject:((CompleteModel *)_uploadArr[i]).install_addr];
+            //通过客户编号删除本地库信息（上传成功的话）
+            [imageArr addObject:((CompleteModel *)_uploadArr[i]).s_CID];
         }
         
     }
@@ -483,10 +494,10 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     //设置图片扩展名
     for (int i = 0; i < _uploadArr.count; i++) {
         
-        if (((CompleteModel *)_uploadArr[i]).image) {
+        if (((CompleteModel *)_uploadArr[i]).s_PhotoFile) {
             
-            NSData *data  = UIImageJPEGRepresentation(((CompleteModel *)_uploadArr[i]).image, .1f);
-            NSData *data2 = UIImageJPEGRepresentation(((CompleteModel *)_uploadArr[i]).second_img, .1f);
+            NSData *data  = UIImageJPEGRepresentation(((CompleteModel *)_uploadArr[i]).s_PhotoFile, .1f);
+            NSData *data2 = UIImageJPEGRepresentation(((CompleteModel *)_uploadArr[i]).s_PhotoFile2, .1f);
             
             if (i>imageArr.count-1) {
                 if (data) {
@@ -512,15 +523,17 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     
     
     for (int i = 0; i < _uploadArr.count; i++) {
-        
+      
         //通过安装地址删除本地库信息（上传成功的话）
-        [install_addr_arr addObject:((CompleteModel *)_uploadArr[i]).install_addr];
+        [install_addr_arr addObject:((CompleteModel *)_uploadArr[i]).s_CID];
         
-        [paraDic setObject:((CompleteModel *)_uploadArr[i]).meter_id forKey:@"meter_id"];
-        [paraDic setObject:((CompleteModel *)_uploadArr[i]).collect_time forKey:@"collect_dt"];
-        [paraDic setObject:((CompleteModel *)_uploadArr[i]).collect_num forKey:@"collect_num"];
-        [paraDic setObject:((CompleteModel *)_uploadArr[i]).collect_avg forKey:@"collect_avg"];
-        [paraDic setObject:[((CompleteModel *)_uploadArr[i]).metering_status isEqualToString:@""]?@"正常":((CompleteModel *)_uploadArr[i]).metering_status forKey:@"collect_status"];
+        NSMutableDictionary *paraDic       = [NSMutableDictionary dictionary];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).s_CID forKey:@"s_CID"];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).i_MarkingMode forKey:@"i_MarkingMode"];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).d_ChaoBiao forKey:@"D_ChaoBiao"];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).i_ChaoMa forKey:@"i_ChaoMa"];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).s_BeiZhu?((CompleteModel *)_uploadArr[i]).s_BeiZhu:@"正常" forKey:@"s_BeiZhu"];
+        [paraDic setObject:((CompleteModel *)_uploadArr[i]).i_ShuiLiang_ChaoJian forKey:@"i_ShuiLiang_ChaoJian"];
         [paraDic setObject:@"1" forKey:@"bs"];
         
         [paraArr addObject:paraDic];
@@ -615,6 +628,7 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     } downloadProgress:^(NSProgress * _Nonnull downloadProgress) {
         
     } completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+        
         if (responseObject) {
             
             [AnimationView dismiss];
@@ -623,47 +637,11 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
                 
                 NSLog(@"上传成功：%@",responseObject);
                 
-                if ([weakSelf.db open]) {
-                    
-                    for (int i = 0; i < _uploadArr.count; i++) {
-                        
-                        if (installArr.count > 0) {
-                            
-                            [weakSelf.db executeUpdate:[NSString stringWithFormat:@"delete from meter_complete where install_addr = '%@'",installArr[i]]];
-                        }
-                    }
-                    
-                    [weakSelf.db close];
-                } else {
-                    
-                    [SCToastView showInView:self.view text:@"数据库打开失败" duration:.5 autoHide:YES];
-                }
-                FMResultSet *restultSet = [weakSelf.db executeQuery:@"SELECT * FROM meter_complete order by user_id"];
-                [weakSelf.dataArr removeAllObjects];
-                while ([restultSet next]) {
-                    NSString *meter_id   = [restultSet stringForColumn:@"meter_id"];
-                    NSString *user_id    = [restultSet stringForColumn:@"user_id"];
-                    NSData *first_image  = [restultSet dataForColumn:@"Collect_img_name1"];
-                    NSData *second_image = [restultSet dataForColumn:@"Collect_img_name2"];
-                    NSData *third_image  = [restultSet dataForColumn:@"Collect_img_name3"];
-                    
-                    CompleteModel *completeModel = [[CompleteModel alloc] init];
-                    completeModel.meter_id       = [NSString stringWithFormat:@"%@",meter_id];
-                    completeModel.user_id        =[NSString stringWithFormat:@"%@",user_id];
-                    completeModel.image          = [UIImage imageWithData:first_image];
-                    completeModel.second_img     = [UIImage imageWithData:second_image];
-                    completeModel.third_img      = [UIImage imageWithData:third_image];
-                    [weakSelf.dataArr addObject:completeModel];
-                }
-                [weakSelf.db close];
-                [weakSelf.uploadArr removeAllObjects];
-                [weakSelf refreshBtnState];
-                
-                [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
-                if (weakSelf.dataArr.count>0) {
-                    [weakSelf showAlertLabel];
-                }
+                [weakSelf updateLocalDB:installArr];
+               
                 [SCToastView showInView:weakSelf.tableView text:@"上传成功" duration:2.5 autoHide:YES];
+                [weakSelf.navigationController popViewControllerAnimated:YES];
+                
             } else if ([[responseObject objectForKey:@"type"] isEqualToString:@"失败"]) {
                 [SCToastView showInView:weakSelf.tableView text:@"上传失败" duration:2.5 autoHide:YES];
             }
@@ -678,6 +656,26 @@ static NSString *uploadID;              // 上传(php)脚本中，接收文件�
     
     [task resume];
     
+}
+
+//上传完成删除信息
+- (void)updateLocalDB :(NSMutableArray *)s_CID{
+    
+    NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
+    NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
+    
+    NSLog(@"文件路径：%@  客户编号：%@", fileName, s_CID);
+    
+    FMDatabase *db = [FMDatabase databaseWithPath:fileName];
+    
+    if ([db open]) {
+        
+        for (int i = 0; i < s_CID.count; i++) {
+            
+            [db executeUpdate:[NSString stringWithFormat:@"delete from Reading_now where s_CID = '%@'",s_CID[i]]];
+        }
+    }
+    [db close];
 }
 
 @end

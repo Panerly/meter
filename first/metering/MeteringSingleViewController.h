@@ -19,7 +19,7 @@
 
 @property (nonatomic, strong) NSMutableArray *dataArr;
 
-@property (nonatomic, strong) NSString *area_id;
+@property (nonatomic, strong) NSString *s_bookNo;
 
 //任务数量
 @property (weak, nonatomic) IBOutlet UILabel *messionCount;

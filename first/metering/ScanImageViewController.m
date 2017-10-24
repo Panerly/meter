@@ -36,7 +36,7 @@
     
     if ([db open]) {
         
-        FMResultSet *restultSet = [db executeQuery:@"SELECT * FROM meter_complete"];
+        FMResultSet *restultSet = [db executeQuery:@"SELECT * FROM Reading_now"];
         while ([restultSet next]) {
             NSData *imageData = [restultSet dataForColumn:@"Collect_img_name1"];
             [self.image setImage:[UIImage imageWithData:imageData]];

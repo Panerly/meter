@@ -57,7 +57,7 @@ UITableViewDataSource
             
             for (int i = 0; i < _dataArr.count; i++) {
                 
-                [db executeUpdate:[NSString stringWithFormat:@"delete from litMeter_info where install_addr = '%@'",((DBModel *)_dataArr[i]).user_addr]];
+                [db executeUpdate:[NSString stringWithFormat:@"delete from Reading_now where s_DiZhi = '%@'",((DBModel *)_dataArr[i]).user_addr]];
             }
             
             [db close];
@@ -89,10 +89,12 @@ UITableViewDataSource
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    
     [self.db close];
 }
 
 - (void)setSegment {
+    
     self.segmentedControl            = [[UISegmentedControl alloc] initWithItems:@[@"小表抄收",@"大表抄收"]];
     self.segmentedControl.frame      = CGRectMake(0, 0, PanScreenWidth/2.5, 30);
     [self.segmentedControl setTitle:@"小表抄收" forSegmentAtIndex:0];
@@ -105,6 +107,7 @@ UITableViewDataSource
     isBigMeter                       = NO;
 }
 - (void)segmentControl :(UISegmentedControl *)segmentedControl{
+    
     switch (segmentedControl.selectedSegmentIndex) {
         case 0:
             
@@ -123,24 +126,23 @@ UITableViewDataSource
 
 
 - (void)queryDB {
+    
     NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
    
-    NSLog(@"文件路径：%@",fileName);
-    
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     
     if ([db open]) {
         
-        FMResultSet *resultSet = [db executeQuery:@"select *from litMeter_info where collector_area != '00' order by id"];
+        FMResultSet *resultSet = [db executeQuery:@"select *from Reading_now where s_bookNo != '00' and bs = '0' order by id"];
         
         _dataArr = [NSMutableArray array];
         [_dataArr removeAllObjects];
         
         while ([resultSet next]) {
             
-            NSString *meter_id  = [resultSet stringForColumn:@"meter_id"];
-            NSString *user_addr = [resultSet stringForColumn:@"install_addr"];
+            NSString *meter_id  = [resultSet stringForColumn:@"s_CID"];
+            NSString *user_addr = [resultSet stringForColumn:@"s_DiZhi"];
 
             DBModel *dbModel    = [[DBModel alloc] init];
             dbModel.meter_id    = [NSString stringWithFormat:@"%@",meter_id];
@@ -155,24 +157,23 @@ UITableViewDataSource
 }
 
 - (void)queryBigMeterDB {
+    
     NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
-    
-//    NSLog(@"文件路径：%@",fileName);
     
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     
     if ([db open]) {
         
-        FMResultSet *resultSet = [db executeQuery:@"select *from litMeter_info where collector_area = '00' order by id"];
+        FMResultSet *resultSet = [db executeQuery:@"select *from Reading_now where s_bookNo = '00' and bs = '0' order by id"];
         
         _dataArr               = [NSMutableArray array];
         [_dataArr removeAllObjects];
         
         while ([resultSet next]) {
             
-            NSString *meter_id  = [resultSet stringForColumn:@"meter_id"];
-            NSString *user_addr = [resultSet stringForColumn:@"install_addr"];
+            NSString *meter_id  = [resultSet stringForColumn:@"s_CID"];
+            NSString *user_addr = [resultSet stringForColumn:@"s_DiZhi"];
             
             DBModel *dbModel    = [[DBModel alloc] init];
             dbModel.meter_id    = [NSString stringWithFormat:@"%@",meter_id];
@@ -190,7 +191,7 @@ UITableViewDataSource
 
 - (void)createTableView {
     
-    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight - 49) style:UITableViewStylePlain];
+    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight) style:UITableViewStylePlain];
     _tableView.delegate = self;
     _tableView.dataSource = self;
     _tableView.showsVerticalScrollIndicator = NO;

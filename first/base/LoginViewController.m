@@ -498,7 +498,7 @@
             
             [defaults setObject:[[responseObject objectForKey:@"test"] objectForKey:@"xqbh"] forKey:@"xqbh"];
             
-            [defaults setObject:[[responseObject objectForKey:@"test"] objectForKey:@"bigmeter_factory"] forKey:@"bigmeter_factory"];
+            [defaults setObject:[[responseObject objectForKey:@"test"] objectForKey:@"loginID"] forKey:@"loginID"];
             
             [defaults setObject:[[responseObject objectForKey:@"test"] objectForKey:@"smallmeter_factory"] forKey:@"smallmeter_factory"];
             

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="12118" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11524"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12086"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -19,13 +20,13 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="user_name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KFd-dZ-mrD">
-                        <rect key="frame" x="8" y="23.5" width="301" height="17"/>
+                        <rect key="frame" x="8" y="47.5" width="301" height="17"/>
                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                         <nil key="textColor"/>
                         <nil key="highlightedColor"/>
                     </label>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="collect_time" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9KI-xt-pqY">
-                        <rect key="frame" x="8" y="71" width="301" height="17"/>
+                        <rect key="frame" x="8" y="69.5" width="301" height="17"/>
                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                         <nil key="textColor"/>
                         <nil key="highlightedColor"/>
@@ -38,7 +39,7 @@
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="collect_num" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vy6-ZR-iH3">
-                        <rect key="frame" x="8" y="45.5" width="301" height="20.5"/>
+                        <rect key="frame" x="8" y="22" width="301" height="20.5"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                         <nil key="highlightedColor"/>
                     </label>
@@ -47,12 +48,12 @@
                 <constraints>
                     <constraint firstItem="KFd-dZ-mrD" firstAttribute="width" secondItem="vy6-ZR-iH3" secondAttribute="width" id="JXU-nC-Tke"/>
                     <constraint firstAttribute="leadingMargin" secondItem="9KI-xt-pqY" secondAttribute="leading" id="P4D-gw-29p"/>
-                    <constraint firstItem="9KI-xt-pqY" firstAttribute="top" secondItem="vy6-ZR-iH3" secondAttribute="bottom" constant="5" id="PI0-QY-N3w"/>
-                    <constraint firstItem="vy6-ZR-iH3" firstAttribute="centerY" secondItem="2c0-7B-I7S" secondAttribute="centerY" id="QYq-At-Hoa"/>
+                    <constraint firstItem="9KI-xt-pqY" firstAttribute="top" secondItem="KFd-dZ-mrD" secondAttribute="bottom" constant="5" id="TO2-QI-B0D"/>
                     <constraint firstItem="9KI-xt-pqY" firstAttribute="width" secondItem="vy6-ZR-iH3" secondAttribute="width" id="U0T-me-uI2"/>
-                    <constraint firstItem="vy6-ZR-iH3" firstAttribute="top" secondItem="KFd-dZ-mrD" secondAttribute="bottom" constant="5" id="Xe1-KB-9Ae"/>
                     <constraint firstItem="vy6-ZR-iH3" firstAttribute="leading" secondItem="2c0-7B-I7S" secondAttribute="leadingMargin" id="daJ-dC-1mF"/>
+                    <constraint firstItem="KFd-dZ-mrD" firstAttribute="centerY" secondItem="2c0-7B-I7S" secondAttribute="centerY" id="h78-UC-hu3"/>
                     <constraint firstItem="b0F-mA-yec" firstAttribute="centerY" secondItem="2c0-7B-I7S" secondAttribute="centerY" id="iU5-98-QeX"/>
+                    <constraint firstItem="KFd-dZ-mrD" firstAttribute="top" secondItem="vy6-ZR-iH3" secondAttribute="bottom" constant="5" id="pUF-sG-Ahz"/>
                     <constraint firstItem="b0F-mA-yec" firstAttribute="leading" secondItem="vy6-ZR-iH3" secondAttribute="trailing" constant="5" id="pZk-wj-cKa"/>
                     <constraint firstItem="b0F-mA-yec" firstAttribute="trailing" secondItem="2c0-7B-I7S" secondAttribute="trailingMargin" id="vwA-9m-Ino"/>
                     <constraint firstAttribute="leadingMargin" secondItem="KFd-dZ-mrD" secondAttribute="leading" id="y8t-Qk-KEi"/>

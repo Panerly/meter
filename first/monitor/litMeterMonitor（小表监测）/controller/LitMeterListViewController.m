@@ -42,6 +42,8 @@ UISearchResultsUpdating
     
     self.view.backgroundColor = [UIColor cyanColor];
     
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
     [self setEffectView];
     
     [self initTableView];
@@ -252,7 +254,7 @@ UISearchResultsUpdating
 //初始化tableview
 - (void)initTableView {
     
-    _tableView                      = [[UITableView alloc] initWithFrame:CGRectMake(0, 64, PanScreenWidth, PanScreenHeight - 64)];
+    _tableView                      = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight)style:UITableViewStylePlain];
     _tableView.delegate             = self;
     _tableView.dataSource           = self;
     _tableView.backgroundColor      = [UIColor clearColor];
@@ -362,8 +364,22 @@ float _oldY;
             flag = NO;
         }
     }
+    //scrollView已经有拖拽手势，直接拿到scrollView的拖拽手势
+    UIPanGestureRecognizer *pan = scrollView.panGestureRecognizer;
+    //获取到拖拽的速度 >0 向下拖动 <0 向上拖动
+    CGFloat velocity = [pan velocityInView:scrollView].y;
+    
+    if (velocity <- 5) {
+        //向上拖动，隐藏导航栏
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }else if (velocity > 5) {
+        //向下拖动，显示导航栏
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
+    }else if(velocity == 0){
+        //停止拖拽
+    }
+    [self.searchController.searchBar resignFirstResponder];
 }
-
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView{
     // 获取开始拖拽时tableview偏移量

@@ -50,8 +50,8 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // 一次性的设置
-    self.titleView.backgroundColor = mBlueColor;
-    [self.okButton setBackgroundColor:mBlueColor];
+    self.titleView.backgroundColor = navigateColor;
+    [self.okButton setBackgroundColor:navigateColor];
     
     self.okButton.layer.cornerRadius = 2;
     self.okButton.clipsToBounds = YES;

@@ -23,8 +23,11 @@ UITableViewDelegate,
 UITableViewDataSource,
 UISearchResultsUpdating,
 UISearchBarDelegate,
-UINavigationControllerDelegate
+UINavigationControllerDelegate,
+CRcellDelegate,
+UIScrollViewDelegate
 >
+
 {
     NSString *identy;
     UIImageView *loading;
@@ -81,6 +84,7 @@ UINavigationControllerDelegate
     areaListArr  = [NSMutableArray array];
     flagListArr  = [NSMutableArray array];
 }
+
 
 //选择所有数据item
 - (void)initRightItem {
@@ -451,14 +455,14 @@ UINavigationControllerDelegate
     
     AFHTTPSessionManager *manager       = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:config];
     
-    manager.requestSerializer.timeoutInterval = 10;
+    manager.requestSerializer.timeoutInterval = 30;
 
     NSDictionary *parameters = @{
                                  @"username":self.userNameLabel,
                                  @"password":self.passWordLabel,
                                  @"db":self.dbLabel,
                                  @"type":self.typeLabel,
-                                 @"fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"],
+                                 @"fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"]:@"",
                                  @"purview":[[NSUserDefaults standardUserDefaults] objectForKey:@"purview"]
                                  };
 
@@ -515,7 +519,7 @@ UINavigationControllerDelegate
         [loading removeFromSuperview];
         [_tableView.mj_header endRefreshing];
         
-        UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"提示" message:@"服务器连接失败" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"Tips" message:[NSString stringWithFormat:@"%@",error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
         
         UIAlertAction *action       = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             
@@ -534,7 +538,7 @@ UINavigationControllerDelegate
 //创建tableview
 - (void)_createTabelView
 {
-    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight-54) style:UITableViewStylePlain];
+    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight) style:UITableViewStylePlain];
     
     self.tableView.separatorStyle = NO;
     [_tableView setExclusiveTouch:YES];
@@ -574,9 +578,6 @@ UINavigationControllerDelegate
 
 #pragma mark - UITableViewDelegate UITableViewDataSource
 
-
-
-
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     return (!self.searchController.active)?self.dataArr.count : self.searchResults.count;
@@ -607,6 +608,7 @@ UINavigationControllerDelegate
     crCell.textLabel.textColor = [UIColor lightGrayColor];
     crCell.textLabel.font = [UIFont systemFontOfSize:14];
     crCell.textLabel.text = [NSString stringWithFormat:@"%ld",indexPath.row+1];
+    crCell.delegate = self;
     return crCell;
 }
 
@@ -641,6 +643,172 @@ UINavigationControllerDelegate
     }
 }
 
+
+#pragma mark - 代理事件
+//跳转到下一界面并传值
+-(void)didClickButton:(UIButton *)button X:(NSString *)x Y:(NSString *)y;
+{
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"选择导航方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertAction *baidu = [UIAlertAction actionWithTitle:@"高德导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [self openGaoDeMapX:x Y:y];
+    }];
+    UIAlertAction *apple = [UIAlertAction actionWithTitle:@"苹果自带导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [self openAppleMapX:x Y:y];
+    }];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        
+    }];
+    [alert addAction:baidu];
+    [alert addAction:apple];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:^{
+        
+    }];
+}
+
+
+#pragma mark - open navigator
+////打开百度地图导航
+//- (void)openBaiDuMapX:(NSString *)x Y:(NSString *)y{
+//
+//    NSString *urlString = [[NSString stringWithFormat:@"baidumap://map/direction?origin=latlng:%f,%f|name:我的位置&destination=latlng:%f,%f|name:终点&mode=driving",currentLatitude, currentLongitude,[x floatValue],[y floatValue]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] ;
+//
+//    [[UIApplication sharedApplication]openURL:[NSURL URLWithString:urlString]];
+//
+//}
+
+//打开高德地图导航
+- (void)openGaoDeMapX:(NSString *)x Y:(NSString *)y{
+    
+    //将百度坐标转换成高德坐标
+    CLLocationCoordinate2D location;
+    location.longitude = [x floatValue];
+    location.latitude = [y floatValue];
+    CLLocationCoordinate2D convertLocation = [self bd09ToWgs84:location];
+    
+    NSString *urlString = [[NSString stringWithFormat:@"iosamap://navi?sourceApplication=%@&backScheme=%@&poiname=%@&lat=%f&lon=%f&dev=1&style=2",@"app name", @"YGche", @"终点", convertLocation.latitude,convertLocation.longitude] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    [[UIApplication sharedApplication]openURL:[NSURL URLWithString:urlString]];
+    
+}
+//打开苹果自带地图导航
+
+- (void)openAppleMapX:(NSString *)x Y:(NSString *)y{
+    //将百度坐标转换成高德坐标
+    CLLocationCoordinate2D location;
+    location.longitude = [x floatValue];
+    location.latitude = [y floatValue];
+    CLLocationCoordinate2D convertLocation = [self bd09ToWgs84:location];
+    
+    //检测定位功能是否开启
+    if([CLLocationManager locationServicesEnabled]){
+        //                CLLocationCoordinate2D loc = CLLocationCoordinate2DMake([self.checkModel.n_GPS_N integerValue], [self.checkModel.n_GPS_E integerValue]);
+        MKMapItem *currentLocation = [MKMapItem mapItemForCurrentLocation];
+        MKMapItem *toLocation = [[MKMapItem alloc] initWithPlacemark:[[MKPlacemark alloc] initWithCoordinate:convertLocation addressDictionary:nil]];
+        [MKMapItem openMapsWithItems:@[currentLocation, toLocation]
+                       launchOptions:@{MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving,
+                                       MKLaunchOptionsShowsTrafficKey: [NSNumber numberWithBool:YES]}];
+        
+    }else{
+        
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"定位信息" message:@"您没有开启定位功能" preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *action = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        
+        [alertVC addAction:action];
+        [self presentViewController:alertVC animated:YES completion:^{
+            
+        }];
+    }
+}
+
+#pragma mark - LocationConvert baidu to gaode
+- (CLLocationCoordinate2D)bd09ToWgs84:(CLLocationCoordinate2D)location
+{
+    CLLocationCoordinate2D gcj02 = [self bd09ToGcj02:location];
+    return [self gcj02Decrypt:gcj02.latitude gjLon:gcj02.longitude];
+}
+- (CLLocationCoordinate2D)bd09ToGcj02:(CLLocationCoordinate2D)location
+{
+    return [self bd09Decrypt:location.latitude bdLon:location.longitude];
+}
+
+- (CLLocationCoordinate2D)gcj02Decrypt:(double)gjLat gjLon:(double)gjLon {
+    CLLocationCoordinate2D  gPt = [self gcj02Encrypt:gjLat bdLon:gjLon];
+    double dLon = gPt.longitude - gjLon;
+    double dLat = gPt.latitude - gjLat;
+    CLLocationCoordinate2D pt;
+    pt.latitude = gjLat - dLat;
+    pt.longitude = gjLon - dLon;
+    return pt;
+}
+- (CLLocationCoordinate2D)bd09Decrypt:(double)bdLat bdLon:(double)bdLon
+{
+    CLLocationCoordinate2D gcjPt;
+    double x = bdLon - 0.0065, y = bdLat - 0.006;
+    double z = sqrt(x * x + y * y) - 0.00002 * sin(y * M_PI);
+    double theta = atan2(y, x) - 0.000003 * cos(x * M_PI);
+    gcjPt.longitude = z * cos(theta);
+    gcjPt.latitude = z * sin(theta);
+    return gcjPt;
+}
+
+- (CLLocationCoordinate2D)gcj02Encrypt:(double)ggLat bdLon:(double)ggLon
+{
+    CLLocationCoordinate2D resPoint;
+    double mgLat;
+    double mgLon;
+    if ([self outOfChina:ggLat bdLon:ggLon]) {
+        resPoint.latitude = ggLat;
+        resPoint.longitude = ggLon;
+        return resPoint;
+    }
+    double dLat = [self transformLat:(ggLon - 105.0)bdLon:(ggLat - 35.0)];
+    double dLon = [self transformLon:(ggLon - 105.0) bdLon:(ggLat - 35.0)];
+    double radLat = ggLat / 180.0 * M_PI;
+    double magic = sin(radLat);
+    magic = 1 - jzEE * magic * magic;
+    double sqrtMagic = sqrt(magic);
+    dLat = (dLat * 180.0) / ((jzA * (1 - jzEE)) / (magic * sqrtMagic) * M_PI);
+    dLon = (dLon * 180.0) / (jzA / sqrtMagic * cos(radLat) * M_PI);
+    mgLat = ggLat + dLat;
+    mgLon = ggLon + dLon;
+    resPoint.latitude = mgLat;
+    resPoint.longitude = mgLon;
+    return resPoint;
+}
+- (BOOL)outOfChina:(double)lat bdLon:(double)lon
+{
+    if (lon < RANGE_LON_MIN || lon > RANGE_LON_MAX)
+        return true;
+    if (lat < RANGE_LAT_MIN || lat > RANGE_LAT_MAX)
+        return true;
+    return false;
+}
+- (double)transformLat:(double)x bdLon:(double)y
+{
+    double ret = LAT_OFFSET_0(x, y);
+    ret += LAT_OFFSET_1;
+    ret += LAT_OFFSET_2;
+    ret += LAT_OFFSET_3;
+    return ret;
+}
+
+- (double)transformLon:(double)x bdLon:(double)y
+{
+    double ret = LON_OFFSET_0(x, y);
+    ret += LON_OFFSET_1;
+    ret += LON_OFFSET_2;
+    ret += LON_OFFSET_3;
+    return ret;
+}
+
+
 #pragma mark - searchController delegate
 
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController{
@@ -672,6 +840,20 @@ UINavigationControllerDelegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     
+    //scrollView已经有拖拽手势，直接拿到scrollView的拖拽手势
+    UIPanGestureRecognizer *pan = scrollView.panGestureRecognizer;
+    //获取到拖拽的速度 >0 向下拖动 <0 向上拖动
+    CGFloat velocity = [pan velocityInView:scrollView].y;
+    
+    if (velocity <- 5) {
+        //向上拖动，隐藏导航栏
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }else if (velocity > 5) {
+        //向下拖动，显示导航栏
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
+    }else if(velocity == 0){
+        //停止拖拽
+    }
     [self.searchController.searchBar resignFirstResponder];
 }
 

@@ -3924,7 +3924,6 @@
 				452ACC311D20DF8000B50002 /* MeterData（水表数据） */,
 				45FF5D1C1D0FC7E600F3D4E4 /* CurrentReceive(实时抄见) */,
 				45E7DB191D1BCAE90011340D /* historyMetering(历史抄见) */,
-				45E26C061D502A1500820EC3 /* Introduction（轮播简介） */,
 				45DCA3801CEF022500E42468 /* controller */,
 				45DCA3811CEF022500E42468 /* model */,
 				45DCA3821CEF022500E42468 /* view */,
@@ -3936,6 +3935,7 @@
 		45DCA3801CEF022500E42468 /* controller */ = {
 			isa = PBXGroup;
 			children = (
+				45E26C061D502A1500820EC3 /* Introduction（轮播简介） */,
 				45DCA3831CEF024F00E42468 /* MonitorViewController.h */,
 				45DCA3841CEF024F00E42468 /* MonitorViewController.m */,
 			);
@@ -3973,7 +3973,7 @@
 				45E26C0B1D502AD600820EC3 /* IntroductionViewController.m */,
 			);
 			name = "Introduction（轮播简介）";
-			path = Introduction;
+			path = ../Introduction;
 			sourceTree = "<group>";
 		};
 		45E26C0D1D50437900820EC3 /* KSDatePicker */ = {

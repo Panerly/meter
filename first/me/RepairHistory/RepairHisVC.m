@@ -162,8 +162,8 @@ UISearchBarDelegate
     NSDictionary *parameters = @{
                                  @"repair_name":[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"],
                                  @"purview":[[NSUserDefaults standardUserDefaults] objectForKey:@"purview"],
-                                 @"big_fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"],
-                                 @"small_fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"smallmeter_factory"]
+                                 @"big_fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"bigmeter_factory"]:@"",
+                                 @"small_fac":[[NSUserDefaults standardUserDefaults] objectForKey:@"smallmeter_factory"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"smallmeter_factory"]:@""
                                  };
     
     AFHTTPResponseSerializer *serializer    = manager.responseSerializer;

@@ -17,7 +17,7 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    self.install_addr.text = self.meterInfoModel.install_Addr;
+    self.install_addr.text = self.meterInfoModel.s_DiZhi;
 }
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {

@@ -35,9 +35,9 @@ UITableViewDelegate,
 AVCaptureMetadataOutputObjectsDelegate,
 YALContextMenuTableViewDelegate,
 UISearchResultsUpdating,
-UISearchBarDelegate
+UISearchBarDelegate,
+MetercellDelegate
 >
-
 {
     //判断是大表还是小表
     BOOL isBigMeter;
@@ -101,7 +101,7 @@ static BOOL flashIsOn;
     [self initiateMenuOptions];
     
     
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
+//    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
     
     [self _createTableView];
     
@@ -144,14 +144,14 @@ static BOOL flashIsOn;
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     if ([db open]) {
         
-        FMResultSet *restultSet = [db executeQuery:@"select * from litMeter_info"];
+        FMResultSet *restultSet = [db executeQuery:@"select * from Reading_now"];
         int litMeterCountNum = 0;
         int bigMeterCountNum = 0;
         while ([restultSet next]) {
-            if (![[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
+            if (![[restultSet stringForColumn:@"s_bookNo"] isEqualToString:@"00"]) {
                 litMeterCountNum++;
             }
-            if ([[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
+            if ([[restultSet stringForColumn:@"s_bookNo"] isEqualToString:@"00"]) {
                 bigMeterCountNum++;
             }
         }
@@ -168,7 +168,7 @@ static BOOL flashIsOn;
 }
 
 /**
- *  监测网络连接请求任务
+ *  监测网络连接请求 网络 或 本地 数据
  */
 - (void)loadInterNetData {
     
@@ -180,7 +180,7 @@ static BOOL flashIsOn;
             [SVProgressHUD showInfoWithStatus:@"似乎已断开与互联网的连接" maskType:SVProgressHUDMaskTypeGradient];
             [self createDB];
             if ([self.db open]) {
-                FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Meter_area where id is not '0' order by id"];
+                FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Area_data where s_bookNo is not '00' order by id"];
                 if (_dataArr) {
                     [_dataArr removeAllObjects];
                 }else {
@@ -189,11 +189,12 @@ static BOOL flashIsOn;
                 }
                 
                 while ([restultSet next]) {
-                    NSString *install_addr         = [restultSet stringForColumn:@"area_Name"];
-                    NSString *area_id              = [restultSet stringForColumn:@"id"];
+                    NSString *install_addr  = [restultSet stringForColumn:@"s_bookName"];
+                    NSString *s_bookNo      = [restultSet stringForColumn:@"s_bookNo"];
+                    
                     MeterInfoModel *meterinfoModel = [[MeterInfoModel alloc] init];
-                    meterinfoModel.install_Addr    = install_addr;
-                    meterinfoModel.area_Id         = area_id;
+                    meterinfoModel.s_DiZhi    = install_addr;
+                    meterinfoModel.s_bookNo   = s_bookNo;
                     [_dataArr addObject:meterinfoModel];
                 }
                 
@@ -204,145 +205,118 @@ static BOOL flashIsOn;
             
         } else {
             
+            //请求区域信息
+            [weakSelf requestAreaData];
+            //请求所有数据
             [weakSelf _requestData];
-            [weakSelf loadLitMeterData];
         }
     }];
     [[AFNetworkReachabilityManager sharedManager] startMonitoring];
 }
 
-//加载大表本地数据
-- (void)loadBigMeterLocalData {
-    
-    [self createDB];
-    if ([self.db open]) {
-        
-        FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM litMeter_info where collector_area = '00' order by id"];
-        if (_dataArr) {
-            
-            [_dataArr removeAllObjects];
-        }else {
-            
-            _dataArr = [NSMutableArray array];
-            [_dataArr removeAllObjects];
-        }
-        
-        while ([restultSet next]) {
-            
-            NSString *install_addr         = [restultSet stringForColumn:@"install_addr"];
-            MeterInfoModel *meterinfoModel = [[MeterInfoModel alloc] init];
-            meterinfoModel.install_Addr    = install_addr;
-            [_dataArr addObject:meterinfoModel];
-        }
-        
-        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
-    }
-    [self.db close];
-    [self.tableView.mj_header endRefreshing];
-    
-}
-/**
- *  加载小表列表数据(网络)
- */
-- (void)loadLitMeterData {
-    
-    //刷新控件
-    if (!loading) {
-        loading        = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 80, 80)];
-        loading.center = self.view.center;
-        UIImage *image = [UIImage sd_animatedGIFNamed:@"刷新5"];
-        [loading setImage:image];
-        [self.view addSubview:loading];
-    }
-    
-    if (_tableView.mj_header.isRefreshing) {
-        [loading removeFromSuperview];
-    }
-    
-    NSString *ipStr = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]:@"58.211.253.180:8000";
-    
-    NSString *litMeterDataUrl                 = [NSString stringWithFormat:@"http://%@/Meter_Reading/Meter_areaServlet",ipStr];
-    
-    NSURLSessionConfiguration *config         = [NSURLSessionConfiguration defaultSessionConfiguration];
-    
-    AFHTTPSessionManager *manager             = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:config];
-    
-    AFHTTPResponseSerializer *serializer      = manager.responseSerializer;
-    
-    manager.requestSerializer.timeoutInterval = 8;
-    
-    serializer.acceptableContentTypes         = [serializer.acceptableContentTypes setByAddingObject:@"text/html"];
-    
-    __weak typeof(self) weakSelf              = self;
-    
-    NSURLSessionTask *litMeterTask = [manager POST:litMeterDataUrl parameters:nil progress:^(NSProgress * _Nonnull uploadProgress) {
-        
-    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-        
-        
-        _dataArr = [NSMutableArray array];
-        [_dataArr removeAllObjects];
-        
-        NSError *error;
-        
-        if (responseObject) {
-            
-            [loading removeFromSuperview];
-            
-            for (NSDictionary *dic in responseObject) {
-                if (![[dic objectForKey:@"area_Id"] isEqualToString:@"00"]) {
-                    
-                    MeterInfoModel *meterInfoModel = [[MeterInfoModel alloc] initWithDictionary:dic error:&error];
-                    [_dataArr addObject:meterInfoModel];
-                }
-                
-                if ([weakSelf.db open]) {
-                    
-                    [weakSelf.db executeUpdate:@"create table if not exists Meter_area (id integer primary key autoincrement,  area_Name text null);"];
-                    [weakSelf.db executeUpdate:@"replace into Meter_area (id, area_Name) values (?,?)",[dic objectForKey:@"area_Id"], [dic objectForKey:@"area_Name"]];
-                    
-                }
-                [weakSelf.db close];
-            }
-            
-            [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
-        }
-        if (!isBigMeter) {
-            [self loadBigMeterLocalData];
-        }
-        NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
-        NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
-        FMDatabase *db = [FMDatabase databaseWithPath:fileName];
-        if ([db open]) {
-            
-            FMResultSet *restultSet = [db executeQuery:@"select * from litMeter_info"];
-            int litMeterCountNum    = 0;
-            int bigMeterCountNum    = 0;
-            while ([restultSet next]) {
-                if (![[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
-                    litMeterCountNum++;
-                }
-                if ([[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
-                    bigMeterCountNum++;
-                }
-            }
-            if (litMeterCountNum + bigMeterCountNum > 0) {
-                
-                self.tabBarItem.badgeValue = [NSString stringWithFormat:@"%d",litMeterCountNum+bigMeterCountNum];
-            }else{
-                
-                self.tabBarItem.badgeValue = nil;
-            }
-        }
-        [db close];
-        
-    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        
-        NSLog(@"小表数据查询失败：%@",error);
-        [loading removeFromSuperview];
-    }];
-    [litMeterTask resume];
-}
+
+///**
+// *  加载小表列表数据(网络)
+// */
+//- (void)loadLitMeterData {
+//    
+//    //刷新控件
+//    if (!loading) {
+//        loading        = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 80, 80)];
+//        loading.center = self.view.center;
+//        UIImage *image = [UIImage sd_animatedGIFNamed:@"刷新5"];
+//        [loading setImage:image];
+//        [self.view addSubview:loading];
+//    }
+//    
+//    if (_tableView.mj_header.isRefreshing) {
+//        [loading removeFromSuperview];
+//    }
+//    
+//    NSString *ipStr = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]:@"58.211.253.180:8000";
+//    
+//    NSString *litMeterDataUrl                 = [NSString stringWithFormat:@"http://%@/Meter_Reading/Meter_areaServlet",ipStr];
+//    
+//    NSURLSessionConfiguration *config         = [NSURLSessionConfiguration defaultSessionConfiguration];
+//    
+//    AFHTTPSessionManager *manager             = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:config];
+//    
+//    AFHTTPResponseSerializer *serializer      = manager.responseSerializer;
+//    
+//    manager.requestSerializer.timeoutInterval = 8;
+//    
+//    serializer.acceptableContentTypes         = [serializer.acceptableContentTypes setByAddingObject:@"text/html"];
+//    
+//    __weak typeof(self) weakSelf              = self;
+//    
+//    NSURLSessionTask *litMeterTask = [manager POST:litMeterDataUrl parameters:nil progress:^(NSProgress * _Nonnull uploadProgress) {
+//        
+//    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+//        
+//        
+//        _dataArr = [NSMutableArray array];
+//        [_dataArr removeAllObjects];
+//        
+//        NSError *error;
+//        
+//        if (responseObject) {
+//            
+//            [loading removeFromSuperview];
+//            
+//            for (NSDictionary *dic in responseObject) {
+//                if (![[dic objectForKey:@"area_Id"] isEqualToString:@"00"]) {
+//                    
+//                    MeterInfoModel *meterInfoModel = [[MeterInfoModel alloc] initWithDictionary:dic error:&error];
+//                    [_dataArr addObject:meterInfoModel];
+//                }
+//                
+//                if ([weakSelf.db open]) {
+//                    
+//                    [weakSelf.db executeUpdate:@"create table if not exists Meter_area (id integer primary key autoincrement,  area_Name text null);"];
+//                    [weakSelf.db executeUpdate:@"replace into Meter_area (id, area_Name) values (?,?)",[dic objectForKey:@"s_bookNo"], [dic objectForKey:@"s_bookName"]];
+//                    
+//                }
+//                [weakSelf.db close];
+//            }
+//            
+//            [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+//        }
+//        if (!isBigMeter) {
+//            [self loadBigMeterLocalData];
+//        }
+//        NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
+//        NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
+//        FMDatabase *db = [FMDatabase databaseWithPath:fileName];
+//        if ([db open]) {
+//            
+//            FMResultSet *restultSet = [db executeQuery:@"select * from litMeter_info"];
+//            int litMeterCountNum    = 0;
+//            int bigMeterCountNum    = 0;
+//            while ([restultSet next]) {
+//                if (![[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
+//                    litMeterCountNum++;
+//                }
+//                if ([[restultSet stringForColumn:@"collector_area"] isEqualToString:@"00"]) {
+//                    bigMeterCountNum++;
+//                }
+//            }
+//            if (litMeterCountNum + bigMeterCountNum > 0) {
+//                
+//                self.tabBarItem.badgeValue = [NSString stringWithFormat:@"%d",litMeterCountNum+bigMeterCountNum];
+//            }else{
+//                
+//                self.tabBarItem.badgeValue = nil;
+//            }
+//        }
+//        [db close];
+//        [[AFNetworkReachabilityManager sharedManager] stopMonitoring];
+//    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+//        
+//        NSLog(@"小表数据查询失败：%@",error);
+//        [loading removeFromSuperview];
+//    }];
+//    [litMeterTask resume];
+//}
 
 
 
@@ -359,6 +333,25 @@ static BOOL flashIsOn;
         self.searchController.active = NO;
         [self.searchController.searchBar removeFromSuperview];
     }
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    
+    //scrollView已经有拖拽手势，直接拿到scrollView的拖拽手势
+    UIPanGestureRecognizer *pan = scrollView.panGestureRecognizer;
+    //获取到拖拽的速度 >0 向下拖动 <0 向上拖动
+    CGFloat velocity = [pan velocityInView:scrollView].y;
+    
+    if (velocity <- 5) {
+        //向上拖动，隐藏导航栏
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }else if (velocity > 5) {
+        //向下拖动，显示导航栏
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
+    }else if(velocity == 0){
+        //停止拖拽
+    }
+    [self.searchController.searchBar resignFirstResponder];
 }
 
 
@@ -444,8 +437,9 @@ static BOOL flashIsOn;
         self.searchController.searchBar.frame                       = CGRectMake(0, 0, 0, 44);
         self.searchController.dimsBackgroundDuringPresentation      = NO;
         self.searchController.hidesNavigationBarDuringPresentation  = NO;
-        self.searchController.searchBar.barTintColor                = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
+//        self.searchController.searchBar.barTintColor                = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
         self.searchController.searchBar.placeholder                 = @"搜索";
+        self.searchController.searchBar.searchBarStyle = UISearchBarStyleMinimal;
         
         self.searchController.searchBar.delegate    = self;
         self.searchController.searchResultsUpdater  = self;
@@ -490,12 +484,8 @@ static BOOL flashIsOn;
     switch (sender.selectedSegmentIndex) {
         case 0://小表
             isBigMeter = YES;
-            [self.dataArr removeAllObjects];
-            if (netStatus == AFNetworkReachabilityStatusNotReachable) {
-                [self loadLitMeterLocalData];
-            } else {
-                [self loadLitMeterData];
-            }
+            [self loadLitMeterLocalData];
+            
             break;
         case 1://大表
             isBigMeter = NO;
@@ -507,11 +497,13 @@ static BOOL flashIsOn;
     
 }
 
+//请求小表本地数据
 - (void)loadLitMeterLocalData {
+    
     [self createDB];
     if ([self.db open]) {
         
-        FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Meter_area where id = 1 order by id"];
+        FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Area_data where s_bookNo is not '00' order by id"];
         if (_dataArr) {
             
             [_dataArr removeAllObjects];
@@ -523,11 +515,50 @@ static BOOL flashIsOn;
         
         while ([restultSet next]) {
             
-            NSString *install_addr          = [restultSet stringForColumn:@"install_addr"];
-            NSString *meter_id              = [restultSet stringForColumn:@"id"];
+            NSString *install_addr          = [restultSet stringForColumn:@"s_bookName"];
+            NSString *s_bookNo         = [restultSet stringForColumn:@"s_bookNo"];
+            
             MeterInfoModel *meterinfoModel  = [[MeterInfoModel alloc] init];
-            meterinfoModel.install_Addr     = install_addr;
-            meterinfoModel.area_Id          = meter_id;
+            meterinfoModel.s_DiZhi     = install_addr;
+            meterinfoModel.s_bookNo    = s_bookNo;
+            [_dataArr addObject:meterinfoModel];
+        }
+        if (_dataArr.count>0) {
+            
+        }else{
+           
+            [self _requestData];
+        }
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+    }
+    [self.db close];
+    [self.tableView.mj_header endRefreshing];
+}
+
+//加载大表本地数据
+- (void)loadBigMeterLocalData {
+    
+    [self createDB];
+    if ([self.db open]) {
+        
+        FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Reading_now where s_bookNo = '00' order by id"];
+        if (_dataArr) {
+            
+            [_dataArr removeAllObjects];
+        }else {
+            
+            _dataArr = [NSMutableArray array];
+            [_dataArr removeAllObjects];
+        }
+        
+        while ([restultSet next]) {
+            
+            NSString *install_addr     = [restultSet stringForColumn:@"s_DiZhi"];
+            NSString *s_bookNo         = [restultSet stringForColumn:@"s_bookNo"];
+            
+            MeterInfoModel *meterinfoModel = [[MeterInfoModel alloc] init];
+            meterinfoModel.s_DiZhi    = install_addr;
+            meterinfoModel.s_bookNo   = s_bookNo;
             [_dataArr addObject:meterinfoModel];
         }
         
@@ -537,7 +568,7 @@ static BOOL flashIsOn;
     [self.tableView.mj_header endRefreshing];
 }
 
-
+#pragma mark-请求所有数据（大小表）
 //请求列表信息
 - (void)_requestData {
     //刷新控件
@@ -553,10 +584,18 @@ static BOOL flashIsOn;
     if (_tableView.mj_header.isRefreshing) {
         [loading removeFromSuperview];
     }
+
+    NSString *ip;
+    if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"] isEqualToString:@"001"]) {
+        
+        ip = @"58.211.253.180:8000";
+    }else{
+        
+        ip = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"];
+    }
     
-    NSString *ipStr = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]?[[NSUserDefaults standardUserDefaults] objectForKey:@"ip"]:@"58.211.253.180:8000";
+    NSString *url = [NSString stringWithFormat:@"http://%@/Meter_Reading/MeterInfoServlet",ip];
     
-    NSString *logInUrl                   = [NSString stringWithFormat:@"http://%@/Meter_Reading/Meter_info_1Servlet",ipStr];
     
     NSURLSessionConfiguration *config    = [NSURLSessionConfiguration defaultSessionConfiguration];
     
@@ -570,7 +609,13 @@ static BOOL flashIsOn;
     
     __weak typeof(self) weakSelf              = self;
     
-    task =[manager POST:logInUrl parameters:nil progress:^(NSProgress * _Nonnull uploadProgress) {
+    
+    NSDictionary *parameters = @{
+                                 @"loginID":[[NSUserDefaults standardUserDefaults] objectForKey:@"loginID"],
+                                 @"i_markingmode":@"1"
+                                 };
+    
+    task =[manager POST:url parameters:parameters progress:^(NSProgress * _Nonnull uploadProgress) {
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         
@@ -582,19 +627,25 @@ static BOOL flashIsOn;
             
             UIAlertAction *conformBtn = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 
+                if ([weakSelf.db open]) {
+                    
+                    [weakSelf.db executeUpdate:@"delete from Reading_now"];
+                }
+                
                 int litMeterCount = 0;
                 int bigMeterCount = 0;
                 for (NSDictionary *dic in responseObject) {
                     
-                    if ([[dic objectForKey:@"collector_Area"] isEqualToString:@"00"]) {
+                    if (![[dic objectForKey:@"s_bookNo"] isEqualToString:@"00"]) {
                         litMeterCount++;
                     }
-                    if (![[dic objectForKey:@"collector_Area"] isEqualToString:@"00"]) {
+                    if ([[dic objectForKey:@"s_bookNo"] isEqualToString:@"00"]) {
                         bigMeterCount++;
                     }
                     
                     if ([weakSelf.db open]) {
-                        [weakSelf.db executeUpdate:@"replace into litMeter_info (collect_Img_Name1, collect_Img_Name2, collect_Img_Name3, collector_Area, comm_Id, id, install_Addr, install_Time, meter_Cali, meter_Id, meter_Name, meter_Txm, meter_Wid, remark, user_Id, water_Kind, x, y, collector_num) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",[dic objectForKey:@"collect_Img_Name1"], [dic objectForKey:@"collect_Img_Name2"], [dic objectForKey:@"collect_Img_Name3"], [dic objectForKey:@"collector_Area"], [dic objectForKey:@"comm_Id"], [dic objectForKey:@"id"], [dic objectForKey:@"install_Addr"], [dic objectForKey:@"install_Time"], [dic objectForKey:@"meter_Cali"], [dic objectForKey:@"meter_Id"], [dic objectForKey:@"meter_Name"], [dic objectForKey:@"meter_Txm"], [dic objectForKey:@"meter_Wid"], [dic objectForKey:@"remark"], [dic objectForKey:@"user_Id"], [dic objectForKey:@"water_Kind"], [dic objectForKey:@"x"], [dic objectForKey:@"y"], [dic objectForKey:@"collector_num"]];
+                        
+                        [weakSelf.db executeUpdate:@"insert into Reading_now (bs, s_bookName, i_caliber, s_bookNo, i_no, i_ChaoBiaoID, s_CID, i_BiaoZhuangTai, i_priceTag, i_SFFS, I_KeHuLeiBie, i_BiaoFenLei, i_RenKouShu, N_GPS_E, N_GPS_N, s_HuMing, s_DiZhi, s_BiaoWei, s_ShuiBiaoGYH, d_ChaoBiao_SC, i_ChaoMa_SC, i_ShuiLiang_pingjun) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",[dic objectForKey:@"bs"], [dic objectForKey:@"s_bookName"], [dic objectForKey:@"i_caliber"], [dic objectForKey:@"s_bookNo"], [dic objectForKey:@"i_no"], [dic objectForKey:@"i_ChaoBiaoID"], [dic objectForKey:@"s_CID"], [dic objectForKey:@"i_BiaoZhuangTai"], [dic objectForKey:@"i_priceTag"], [dic objectForKey:@"i_SFFS"], [dic objectForKey:@"I_KeHuLeiBie"], [dic objectForKey:@"i_BiaoFenLei"], [dic objectForKey:@"i_RenKouShu"], [dic objectForKey:@"N_GPS_E"], [dic objectForKey:@"N_GPS_N"], [dic objectForKey:@"s_HuMing"], [dic objectForKey:@"s_DiZhi"], [dic objectForKey:@"s_BiaoWei"], [dic objectForKey:@"s_ShuiBiaoGYH"], [dic objectForKey:@"d_ChaoBiao_SC"], [dic objectForKey:@"i_ChaoMa_SC"], [dic objectForKey:@"i_ShuiLiang_pingjun"]];
                     }
                 }
                 NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -626,6 +677,7 @@ static BOOL flashIsOn;
             
         }
         
+        [[AFNetworkReachabilityManager sharedManager] stopMonitoring];
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         
         [weakSelf.tableView.mj_header endRefreshing];
@@ -645,7 +697,7 @@ static BOOL flashIsOn;
             }];
         }
         
-        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:@"服务器连接失败" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"Tips" message:[NSString stringWithFormat:@"%@", error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
         
         UIAlertAction *action = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             
@@ -660,6 +712,276 @@ static BOOL flashIsOn;
     
     [task resume];
     
+}
+
+#pragma mark-请求区域数据
+
+- (void)requestAreaData {
+    
+    NSString *ip;
+    if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"] isEqualToString:@"001"]) {
+        
+        ip = @"58.211.253.180:8000";
+    }else{
+        
+        ip = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"];
+    }
+    
+    NSString *url = [NSString stringWithFormat:@"http://%@/Meter_Reading/Meter_areaServlet",ip];
+    
+    
+    NSURLSessionConfiguration *config    = [NSURLSessionConfiguration defaultSessionConfiguration];
+    
+    AFHTTPSessionManager *manager        = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:config];
+    
+    AFHTTPResponseSerializer *serializer = manager.responseSerializer;
+    
+    manager.requestSerializer.timeoutInterval = 8;
+    
+    serializer.acceptableContentTypes         = [serializer.acceptableContentTypes setByAddingObject:@"text/html"];
+    
+    __weak typeof(self) weakSelf              = self;
+    
+    
+//    NSDictionary *parameters = @{
+//                                 @"loginID":[[NSUserDefaults standardUserDefaults] objectForKey:@"loginID"],
+//                                 @"i_markingmode":@"1"
+//                                 };
+    
+    NSURLSessionTask *areaTask =[manager POST:url parameters:nil progress:^(NSProgress * _Nonnull uploadProgress) {
+        
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        
+        if (responseObject) {
+            
+            [weakSelf.tableView.mj_header endRefreshing];
+            self.dataArr = [NSMutableArray array];
+            [self.dataArr removeAllObjects];
+            [weakSelf createDB];
+            
+            if ([weakSelf.db open]) {
+                
+                [weakSelf.db executeUpdate:@"delete from Area_data"];
+            }
+            
+            for (NSDictionary *dic in responseObject) {
+                
+                
+                if ([weakSelf.db open]) {
+                    
+                    [weakSelf.db executeUpdate:@"insert into Area_data (s_bookNo, s_bookName) values (?,?)",[dic objectForKey:@"s_bookNo"], [dic objectForKey:@"s_bookName"]];
+                }
+                
+                MeterInfoModel *meterinfoModel = [[MeterInfoModel alloc] init];
+                meterinfoModel.s_DiZhi  = [dic objectForKey:@"s_bookName"];
+                meterinfoModel.s_bookNo = [dic objectForKey:@"s_bookNo"];
+                [self.dataArr addObject:meterinfoModel];
+            }
+            
+            [weakSelf.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+            [weakSelf.db close];
+        }
+        
+        [[AFNetworkReachabilityManager sharedManager] stopMonitoring];
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        
+        [weakSelf.tableView.mj_header endRefreshing];
+        
+        NSLog(@"错误信息：%@",error);
+        
+        UIAlertAction *confir = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        if (error.code == -1001) {
+            UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:@"请求超时!" preferredStyle:UIAlertControllerStyleAlert];
+            
+            [alertVC addAction:confir];
+            [weakSelf presentViewController:alertVC animated:YES completion:^{
+                
+            }];
+        }
+        
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"Tips" message:[NSString stringWithFormat:@"%@", error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *action = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        
+        [alertVC addAction:action];
+        [weakSelf presentViewController:alertVC animated:YES completion:^{
+            
+        }];
+        
+    }];
+    
+    [areaTask resume];
+}
+
+
+
+#pragma mark - 代理事件
+//跳转到下一界面并传值
+-(void)didClickButton:(UIButton *)button X:(NSString *)x Y:(NSString *)y;
+{
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"选择导航方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertAction *baidu = [UIAlertAction actionWithTitle:@"高德导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [self openGaoDeMapX:x Y:y];
+    }];
+    UIAlertAction *apple = [UIAlertAction actionWithTitle:@"苹果自带导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [self openAppleMapX:x Y:y];
+    }];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        
+    }];
+    [alert addAction:baidu];
+    [alert addAction:apple];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:^{
+        
+    }];
+}
+
+
+#pragma mark - open navigator
+////打开百度地图导航
+//- (void)openBaiDuMapX:(NSString *)x Y:(NSString *)y{
+//
+//    NSString *urlString = [[NSString stringWithFormat:@"baidumap://map/direction?origin=latlng:%f,%f|name:我的位置&destination=latlng:%f,%f|name:终点&mode=driving",currentLatitude, currentLongitude,[x floatValue],[y floatValue]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] ;
+//
+//    [[UIApplication sharedApplication]openURL:[NSURL URLWithString:urlString]];
+//
+//}
+
+//打开高德地图导航
+- (void)openGaoDeMapX:(NSString *)x Y:(NSString *)y{
+    
+    //将百度坐标转换成高德坐标
+    CLLocationCoordinate2D location;
+    location.longitude = [x floatValue];
+    location.latitude = [y floatValue];
+    CLLocationCoordinate2D convertLocation = [self bd09ToWgs84:location];
+    
+    NSString *urlString = [[NSString stringWithFormat:@"iosamap://navi?sourceApplication=%@&backScheme=%@&poiname=%@&lat=%f&lon=%f&dev=1&style=2",@"app name", @"YGche", @"终点", convertLocation.latitude,convertLocation.longitude] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    
+    [[UIApplication sharedApplication]openURL:[NSURL URLWithString:urlString]];
+    
+}
+//打开苹果自带地图导航
+
+- (void)openAppleMapX:(NSString *)x Y:(NSString *)y{
+    //将百度坐标转换成高德坐标
+    CLLocationCoordinate2D location;
+    location.longitude = [x floatValue];
+    location.latitude = [y floatValue];
+    CLLocationCoordinate2D convertLocation = [self bd09ToWgs84:location];
+    
+    //检测定位功能是否开启
+    if([CLLocationManager locationServicesEnabled]){
+        //                CLLocationCoordinate2D loc = CLLocationCoordinate2DMake([self.checkModel.n_GPS_N integerValue], [self.checkModel.n_GPS_E integerValue]);
+        MKMapItem *currentLocation = [MKMapItem mapItemForCurrentLocation];
+        MKMapItem *toLocation = [[MKMapItem alloc] initWithPlacemark:[[MKPlacemark alloc] initWithCoordinate:convertLocation addressDictionary:nil]];
+        [MKMapItem openMapsWithItems:@[currentLocation, toLocation]
+                       launchOptions:@{MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving,
+                                       MKLaunchOptionsShowsTrafficKey: [NSNumber numberWithBool:YES]}];
+        
+    }else{
+        
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"定位信息" message:@"您没有开启定位功能" preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *action = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        
+        [alertVC addAction:action];
+        [self presentViewController:alertVC animated:YES completion:^{
+            
+        }];
+    }
+}
+
+#pragma mark - LocationConvert baidu to gaode
+- (CLLocationCoordinate2D)bd09ToWgs84:(CLLocationCoordinate2D)location
+{
+    CLLocationCoordinate2D gcj02 = [self bd09ToGcj02:location];
+    return [self gcj02Decrypt:gcj02.latitude gjLon:gcj02.longitude];
+}
+- (CLLocationCoordinate2D)bd09ToGcj02:(CLLocationCoordinate2D)location
+{
+    return [self bd09Decrypt:location.latitude bdLon:location.longitude];
+}
+
+- (CLLocationCoordinate2D)gcj02Decrypt:(double)gjLat gjLon:(double)gjLon {
+    CLLocationCoordinate2D  gPt = [self gcj02Encrypt:gjLat bdLon:gjLon];
+    double dLon = gPt.longitude - gjLon;
+    double dLat = gPt.latitude - gjLat;
+    CLLocationCoordinate2D pt;
+    pt.latitude = gjLat - dLat;
+    pt.longitude = gjLon - dLon;
+    return pt;
+}
+- (CLLocationCoordinate2D)bd09Decrypt:(double)bdLat bdLon:(double)bdLon
+{
+    CLLocationCoordinate2D gcjPt;
+    double x = bdLon - 0.0065, y = bdLat - 0.006;
+    double z = sqrt(x * x + y * y) - 0.00002 * sin(y * M_PI);
+    double theta = atan2(y, x) - 0.000003 * cos(x * M_PI);
+    gcjPt.longitude = z * cos(theta);
+    gcjPt.latitude = z * sin(theta);
+    return gcjPt;
+}
+
+- (CLLocationCoordinate2D)gcj02Encrypt:(double)ggLat bdLon:(double)ggLon
+{
+    CLLocationCoordinate2D resPoint;
+    double mgLat;
+    double mgLon;
+    if ([self outOfChina:ggLat bdLon:ggLon]) {
+        resPoint.latitude = ggLat;
+        resPoint.longitude = ggLon;
+        return resPoint;
+    }
+    double dLat = [self transformLat:(ggLon - 105.0)bdLon:(ggLat - 35.0)];
+    double dLon = [self transformLon:(ggLon - 105.0) bdLon:(ggLat - 35.0)];
+    double radLat = ggLat / 180.0 * M_PI;
+    double magic = sin(radLat);
+    magic = 1 - jzEE * magic * magic;
+    double sqrtMagic = sqrt(magic);
+    dLat = (dLat * 180.0) / ((jzA * (1 - jzEE)) / (magic * sqrtMagic) * M_PI);
+    dLon = (dLon * 180.0) / (jzA / sqrtMagic * cos(radLat) * M_PI);
+    mgLat = ggLat + dLat;
+    mgLon = ggLon + dLon;
+    resPoint.latitude = mgLat;
+    resPoint.longitude = mgLon;
+    return resPoint;
+}
+- (BOOL)outOfChina:(double)lat bdLon:(double)lon
+{
+    if (lon < RANGE_LON_MIN || lon > RANGE_LON_MAX)
+        return true;
+    if (lat < RANGE_LAT_MIN || lat > RANGE_LAT_MAX)
+        return true;
+    return false;
+}
+- (double)transformLat:(double)x bdLon:(double)y
+{
+    double ret = LAT_OFFSET_0(x, y);
+    ret += LAT_OFFSET_1;
+    ret += LAT_OFFSET_2;
+    ret += LAT_OFFSET_3;
+    return ret;
+}
+
+- (double)transformLon:(double)x bdLon:(double)y
+{
+    double ret = LON_OFFSET_0(x, y);
+    ret += LON_OFFSET_1;
+    ret += LON_OFFSET_2;
+    ret += LON_OFFSET_3;
+    return ret;
 }
 
 #pragma mark - openQrcode
@@ -911,10 +1233,10 @@ static BOOL flashIsOn;
     
     if ([db open]) {
         
-        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from litMeter_info where meter_txm = '%@'",meter_id]];
+        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from Reading_now where s_bookNo = '%@'",meter_id]];
         NSString *install_addr;
         while ([restultSet next]) {
-            install_addr = [restultSet stringForColumn:@"meter_id"];
+            install_addr = [restultSet stringForColumn:@"s_bookNo"];
         }
         if (install_addr) {
             
@@ -963,10 +1285,12 @@ static BOOL flashIsOn;
     }
     if (indexPath.row == 2) {
         LocaDBViewController *locaDB = [[LocaDBViewController alloc] init];
+        locaDB.hidesBottomBarWhenPushed = YES;
         [self.navigationController showViewController:locaDB sender:nil];
     }
     if (indexPath.row == 3) {
         CompleteViewController *completeVC = [[CompleteViewController alloc] init];
+        completeVC.hidesBottomBarWhenPushed = YES;
         [self.navigationController showViewController:completeVC sender:nil];
     }
     
@@ -986,21 +1310,23 @@ static BOOL flashIsOn;
             MeteringSingleViewController *meteringVC = [[MeteringSingleViewController alloc] init];
             if (self.searchController.active) {
                 
-                meteringVC.area_id = [((MeterInfoModel *)_searchResults[indexPath.row]).area_Id isEqualToString:@"1"]?@"01":((MeterInfoModel *)_searchResults[indexPath.row]).area_Id;
+                meteringVC.s_bookNo = ((MeterInfoModel *)_searchResults[indexPath.row]).s_bookNo;
             }else {
                 
-                meteringVC.area_id = [((MeterInfoModel *)_dataArr[indexPath.row]).area_Id isEqualToString:@"1"]?@"01":((MeterInfoModel *)_dataArr[indexPath.row]).area_Id;
+                meteringVC.s_bookNo = ((MeterInfoModel *)_dataArr[indexPath.row]).s_bookNo;
             }
             meteringVC.hidesBottomBarWhenPushed = YES;
             meteringVC.title = @"任务详情";
             [self.navigationController showViewController:meteringVC sender:nil];
-        }
-        else
-        {
+        }else {
+            
             SingleViewController *singleVC      = [[SingleViewController alloc] init];
-            singleVC.meter_id_string            = self.searchController.active?((MeterInfoModel *)_searchResults[indexPath.row]).install_Addr:((MeterInfoModel *)_dataArr[indexPath.row]).install_Addr;
+            
+            singleVC.meter_id_string            = self.searchController.active?((MeterInfoModel *)_searchResults[indexPath.row]).s_DiZhi:((MeterInfoModel *)_dataArr[indexPath.row]).s_DiZhi;
+            
             singleVC.hidesBottomBarWhenPushed   = YES;
             singleVC.isBigMeter                 = YES;
+            
             [self.navigationController showViewController:singleVC sender:nil];
         }
     }
@@ -1045,6 +1371,7 @@ static BOOL flashIsOn;
         cell = [[[NSBundle mainBundle] loadNibNamed:@"MeterInfoTableViewCell" owner:self options:nil] lastObject];
     }
     cell.meterInfoModel= self.searchController.active?_searchResults[indexPath.row]:_dataArr[indexPath.row];
+    cell.delegate = self;
     return cell;
 }
 
@@ -1133,28 +1460,29 @@ static BOOL flashIsOn;
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     
     if ([db open]) {
-        BOOL createLitMeter = [db executeUpdate:@"create table if not exists litMeter_info (id integer PRIMARY key AUTOINCREMENT, meter_id text not null, user_id text null, meter_txm nvarchar(20) null, meter_wid nvarchar(20) null, collector_area nvarchar(2) null, install_time datetime null, install_addr nvarchar(50) null, comm_id nvarchar(20) null, water_kind nvarchar(20) null, meter_cali int null, meter_name varchar(50) null, x decimal(18, 5) null, y decimal(18, 5) null, remark nvarchar(100) null, bs nvarchar(2) null, Collect_img_name1 nvarchar(50) null, Collect_img_name2 nvarchar(50) null, Collect_img_name3 nvarchar(50) null, collector_num navrchar(50) null);"];
+        
+        BOOL createLitMeter = [db executeUpdate:@"CREATE TABLE IF NOT EXISTS Reading_now (id integer PRIMARY KEY AUTOINCREMENT, bs text null, s_bookName text null, i_caliber text null, s_bookNo text null, i_no text null, i_ChaoBiaoID text null, s_CID text null, i_BiaoZhuangTai text null, i_priceTag text null, i_SFFS text null, I_KeHuLeiBie text null, i_BiaoFenLei text null, i_RenKouShu text null, N_GPS_E decimal(18, 5) null, N_GPS_N decimal(18, 5) null, s_HuMing  text null, s_DiZhi text null, s_BiaoWei text null, s_ShuiBiaoGYH text null, d_ChaoBiao_SC text null, i_ChaoMa_SC text null, i_ShuiLiang_pingjun text null, s_PhotoFile text null, s_PhotoFile2 text null, s_PhotoFile3 blob text, s_BeiZhu text null, i_ChaoMa text null, i_ShuiLiang_ChaoJian text null, d_ChaoBiao text null, i_MarkingMode text null);"];
         
         if (createLitMeter) {
-            NSLog(@"创建小表成功");
+            
+            NSLog(@"创建抄收表成功");
         } else {
-            NSLog(@"创建小表失败！");
-            [SCToastView showInView:_tableView text:@"创建小表失败" duration:.5 autoHide:YES];
+            
+            NSLog(@"创建抄收表失败！");
+            [SCToastView showInView:_tableView text:@"创建抄收表失败" duration:.5 autoHide:YES];
         }
-        
-        BOOL createLitMeterHisAll = [db executeUpdate:@"create table if not exists litMeter_reading (id integer primary key autoincrement, meter_id text not null, collect_num text not null, collect_dt text not null, collect_avg text not null, collect_status text not null, collect_img_name1 nvarchar(50) null, collect_img_name2 nvarchar null)"];
+
+        BOOL createLitMeterHisAll = [db executeUpdate:@"create table if not exists Area_data (id integer primary key autoincrement, s_bookNo text not null, s_bookName text not null)"];
         if (createLitMeterHisAll) {
-            NSLog(@"创建小表上期情况成功");
+            NSLog(@"创建区域表成功");
         }else {
-            NSLog(@"创建小表上期情况失败");
-            [SCToastView showInView:_tableView text:@"创建小表失败" duration:.5 autoHide:YES];
+            NSLog(@"创建区域表失败");
+            [SCToastView showInView:_tableView text:@"创建区域表失败" duration:.5 autoHide:YES];
         }
-        
         
     }
     
     self.db = db;
-    
 }
 
 //- (void)didReceiveMemoryWarning {
@@ -1179,21 +1507,21 @@ static BOOL flashIsOn;
     if (isBigMeter) {
         
         for (MeterInfoModel *model in self.dataArr) {
-            [arr addObject:model.area_Name];
+            [arr addObject:model.s_DiZhi];
         }
         arr2 = [[arr filteredArrayUsingPredicate:searchPredicate] mutableCopy];
         for (MeterInfoModel *model in self.dataArr) {
-            if ([arr2 containsObject:model.area_Name]) {
+            if ([arr2 containsObject:model.s_DiZhi]) {
                 [self.searchResults addObject:model];
             }
         }
     } else {
         for (MeterInfoModel *model in self.dataArr) {
-            [arr addObject:model.install_Addr];
+            [arr addObject:model.s_DiZhi];
         }
         arr2 = [[arr filteredArrayUsingPredicate:searchPredicate] mutableCopy];
         for (MeterInfoModel *model in self.dataArr) {
-            if ([arr2 containsObject:model.install_Addr]) {
+            if ([arr2 containsObject:model.s_DiZhi]) {
                 [self.searchResults addObject:model];
             }
         }

@@ -16,8 +16,17 @@
 @property (weak, nonatomic) IBOutlet UITextField *meterInfo;
 @property (weak, nonatomic) IBOutlet UITextField *userAddrTextfield;
 @property (weak, nonatomic) IBOutlet UITextField *mterConditionTextField;
+@property (weak, nonatomic) IBOutlet UITextField *meterNumTextfield;
 @property (weak, nonatomic) IBOutlet UITextView *remarkTextView;
 @property (weak, nonatomic) IBOutlet UILabel *remarkLabel;
+
+@property (nonatomic, strong) NSString *averageNumStr;
+@property (nonatomic, strong) NSString *previousNumStr;
+@property (nonatomic, strong) NSString *bshTextStr;
+@property (nonatomic, strong) NSString *userNumStr;
+@property (nonatomic, strong) NSString *meterInfoStr;
+@property (nonatomic, strong) NSString *userAddrStr;
+
 
 - (IBAction)reportButton:(id)sender;
 - (IBAction)submitButton:(id)sender;

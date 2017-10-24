@@ -254,22 +254,18 @@
             break;
             
         case 205:
-//            [alertVC addAction:action];
-//            [self presentViewController:alertVC animated:YES completion:^{
-//            }];
+            if ([[[NSUserDefaults standardUserDefaults] objectForKey:@"purview"] isEqualToString:@"1"]){//此功能仅限外复人员使用
+                
+                [self.navigationController showViewController:checkVC sender:nil];
+                
+            }else{
+                
+                [checkAlert addAction:action];
+                [self presentViewController:checkAlert animated:YES completion:^{
+                    
+                }];
+            }
             
-            //            [self.navigationController showViewController:pay sender:nil];
-//            if (![[[NSUserDefaults standardUserDefaults] objectForKey:@"purview"] isEqualToString:@"5"]){//此功能仅限外复人员使用
-//                
-////                [self.navigationController showViewController:repairHisVC sender:nil];
-//            }else{
-//                
-//                [checkAlert addAction:action];
-//                [self presentViewController:checkAlert animated:YES completion:^{
-//                    
-//                }];
-//            }
-            [self.navigationController showViewController:checkVC sender:nil];
             break;
             
         default:

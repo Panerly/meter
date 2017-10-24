@@ -46,6 +46,7 @@ UISearchBarDelegate
 }
 
 - (void)getCompleteNum {
+    
     NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
     
@@ -53,21 +54,27 @@ UISearchBarDelegate
     
     if ([db open]) {
         
-        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from meter_complete where collect_area = '%@'",_area_id]];
+        //标示 0未抄收 1已上传 2已抄收
+        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from Reading_now where bs = 2 and s_bookNo = '%@'",_s_bookNo]];
         
         int uncompleteNum = 0;
         int completeNum   = 0;
         
+        //已完成抄收的数据
         while ([restultSet next]) {
-            if ([restultSet stringForColumn:@"install_addr"]) {
+            
+            if ([restultSet stringForColumn:@"s_bookNo"]) {
                 completeNum++;
             }
         }
         
-        FMResultSet *restultSet2 = [db executeQuery:[NSString stringWithFormat:@"select * from litMeter_info where collector_area = '%@'",_area_id]];
+        FMResultSet *restultSet2 = [db executeQuery:[NSString stringWithFormat:@"select * from Reading_now where s_bookNo = '%@'",_s_bookNo]];
         
+        //所有数据
         while ([restultSet2 next]) {
-            if ([restultSet2 stringForColumn:@"install_addr"]) {
+            
+            if ([restultSet2 stringForColumn:@"s_bookNo"]) {
+                
                 uncompleteNum++;
             }
         }
@@ -81,17 +88,22 @@ UISearchBarDelegate
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+    
     [self getCompleteNum];
     if (isDone) {
+        
         [self getCompleteDataFromDB];
     }else {
+        
         [self getDataFromDB];
     }
 }
 //视图消失移除搜索框
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    
     if (self.searchController.active) {
+        
         self.searchController.active = NO;
         [self.searchController.searchBar removeFromSuperview];
     }
@@ -116,20 +128,23 @@ UISearchBarDelegate
     self.searchController.dimsBackgroundDuringPresentation      = NO;
     self.searchController.hidesNavigationBarDuringPresentation  = NO;
     self.searchController.searchBar.placeholder                 = @"搜索";
+    self.searchController.searchBar.searchBarStyle = UISearchBarStyleMinimal;
     
     self.searchController.searchBar.delegate    = self;
     self.searchController.searchResultsUpdater  = self;
     //搜索栏表头视图
     self.tableView.tableHeaderView = self.searchController.searchBar;
     [self.searchController.searchBar sizeToFit];
-
 }
 
 //刷新
 - (void)refreshData {
+    
     if (isDone) {
+        
         [self getCompleteDataFromDB];
     }else {
+        
         [self getDataFromDB];
     }
 }
@@ -140,22 +155,15 @@ UISearchBarDelegate
     NSString *doc       = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName  = [doc stringByAppendingPathComponent:@"meter.sqlite"];
     
-    NSLog(@"文件路径：%@  区域编码：%@", fileName, _area_id);
+    NSLog(@"文件路径：%@  区域编码：%@", fileName, _s_bookNo);
     
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     
     if ([db open]) {
         
-        //如果被网络覆盖了 则再删除本地中已抄收的数据
-        FMResultSet *completeRestultSet = [db executeQuery:[NSString stringWithFormat:@"select * from meter_complete where collect_area = '%@'",_area_id]];
-        while ([completeRestultSet next]) {
-            
-            NSString *install_addr = [completeRestultSet stringForColumn:@"install_addr"];
-            [db executeUpdate:[NSString stringWithFormat:@"delete from litMeter_info where install_addr = '%@'",install_addr]];
-        }
+        //查询未抄收的 更新tableview //标示 0未抄收 1已上传 2已抄收
+        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from Reading_now where bs = '0' and s_bookNo = '%@'",_s_bookNo]];
         
-        //查询未抄收的 更新tableview
-        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from litMeter_info where collector_area = '%@'",_area_id]];
         _dataArr = [NSMutableArray array];
         [_dataArr removeAllObjects];
         
@@ -163,9 +171,9 @@ UISearchBarDelegate
         
         while ([restultSet next]) {
             
-            NSString *install_addr          = [restultSet stringForColumn:@"install_addr"];
+            NSString *install_addr          = [restultSet stringForColumn:@"s_DiZhi"];
             MeterInfoModel *meterinfoModel  = [[MeterInfoModel alloc] init];
-            meterinfoModel.install_Addr     = install_addr;
+            meterinfoModel.s_DiZhi     = install_addr;
             [_dataArr addObject:meterinfoModel];
         }
         self.messionCount.text = [NSString stringWithFormat:@"待抄数量： %ld 户",(long)_dataArr.count];
@@ -175,16 +183,17 @@ UISearchBarDelegate
 
 //获取已抄收的数据并更新
 - (void)getCompleteDataFromDB {
+    
     NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
     NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
     
-    NSLog(@"文件路径：%@  区域编码：%@", fileName, _area_id);
+    NSLog(@"文件路径：%@  区域编码：%@", fileName, _s_bookNo);
     
     FMDatabase *db = [FMDatabase databaseWithPath:fileName];
     
     if ([db open]) {
         
-        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from meter_complete where collect_area = '%@'",_area_id]];
+        FMResultSet *restultSet = [db executeQuery:[NSString stringWithFormat:@"select * from Reading_now where bs = '2' and s_bookNo = '%@'",_s_bookNo]];
         _dataArr                = [NSMutableArray array];
         [_dataArr removeAllObjects];
         
@@ -192,9 +201,10 @@ UISearchBarDelegate
         
         while ([restultSet next]) {
             
-            NSString *install_addr = [restultSet stringForColumn:@"install_addr"];
+            NSString *install_addr = [restultSet stringForColumn:@"s_DiZhi"];
+            
             MeterInfoModel *meterinfoModel = [[MeterInfoModel alloc] init];
-            meterinfoModel.install_Addr = install_addr;
+            meterinfoModel.s_DiZhi = install_addr;
             [_dataArr addObject:meterinfoModel];
         }
         [_tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
@@ -229,7 +239,7 @@ UISearchBarDelegate
     if (!isDone) {
         
         SingleViewController *singleVC      = [[SingleViewController alloc] init];
-        singleVC.meter_id_string            = self.searchController.active?((MeterInfoModel *)_searchResults[indexPath.row]).install_Addr:((MeterInfoModel *)_dataArr[indexPath.row]).install_Addr;
+        singleVC.meter_id_string            = self.searchController.active?((MeterInfoModel *)_searchResults[indexPath.row]).s_DiZhi:((MeterInfoModel *)_dataArr[indexPath.row]).s_DiZhi;
         singleVC.hidesBottomBarWhenPushed   = YES;
         singleVC.isBigMeter                 = NO;
         [self.navigationController pushViewController:singleVC animated:YES];
@@ -244,15 +254,19 @@ UISearchBarDelegate
 - (IBAction)segmentCtrl:(UISegmentedControl *)sender {
     switch (sender.selectedSegmentIndex) {
         case 0:
+            
             isDone = NO;
             if (self.searchController.active) {
+                
                 self.searchController.active = NO;
             }
             [self getDataFromDB];
             break;
         case 1:
+            
             isDone = YES;
             if (self.searchController.active) {
+                
                 self.searchController.active = NO;
             }
             [self getCompleteDataFromDB];
@@ -275,11 +289,11 @@ UISearchBarDelegate
     [arr2 removeAllObjects];
     
     for (MeterInfoModel *model in self.dataArr) {
-        [arr addObject:model.install_Addr];
+        [arr addObject:model.s_DiZhi];
     }
     arr2 = [[arr filteredArrayUsingPredicate:searchPredicate] mutableCopy];
     for (MeterInfoModel *model in self.dataArr) {
-        if ([arr2 containsObject:model.install_Addr]) {
+        if ([arr2 containsObject:model.s_DiZhi]) {
             [self.searchResults addObject:model];
         }
     }

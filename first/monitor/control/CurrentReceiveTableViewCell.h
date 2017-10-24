@@ -9,6 +9,15 @@
 #import <UIKit/UIKit.h>
 #import "CRModel.h"
 
+
+@protocol CRcellDelegate <NSObject>
+
+@optional
+
+-(void)didClickButton:(UIButton *)button X:(NSString *)x Y:(NSString *)y;
+
+@end
+
 @interface CurrentReceiveTableViewCell : UITableViewCell
 
 @property (weak, nonatomic) IBOutlet UIImageView *userImage;
@@ -22,5 +31,8 @@
 @property (nonatomic, strong) NSString *y;
 @property (nonatomic, strong) NSString *userNameStr;
 @property (weak, nonatomic) IBOutlet UILabel *collect_num;
+
+
+@property(nonatomic,weak) id<CRcellDelegate> delegate;
 
 @end
