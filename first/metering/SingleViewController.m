@@ -50,6 +50,8 @@ static BOOL flag;
     flag = YES;
     
     [self _getCode];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
      
     [self _makeImageTouchLess];
     
@@ -172,6 +174,8 @@ static BOOL flag;
             self.previousReading.text   = [restultSet stringForColumn:@"i_ChaoMa_SC"];
             self.previousSettle.text    = [restultSet stringForColumn:@"d_ChaoBiao_SC"];
             self.collect_area           = [restultSet stringForColumn:@"s_bookNo"];
+            self.i_caliber              = [restultSet stringForColumn:@"i_caliber"];
+            self.s_ShuiBiaoGYH          = [restultSet stringForColumn:@"s_ShuiBiaoGYH"];
         }
     }
 }
@@ -427,7 +431,7 @@ static BOOL flag;
         [weakSelf reportUpload:arr[0]];
     };
 }
-
+#pragma mark - 上报
 //上报故障表
 - (void)reportUpload :(NSString *)reason{
     NSLog(@"上报原因%@",reason);
@@ -470,7 +474,10 @@ static BOOL flag;
                                  @"report_time":currentTime,
                                  @"alarm_reason":reason,
                                  @"type":@"1",
-                                 @"i_markingmode":@"1"
+                                 @"i_markingmode":@"1",
+                                 @"user_name":self.user_name.text,
+                                 @"kj":self.i_caliber,
+                                 @"bsh":self.s_ShuiBiaoGYH
                                  };
 
     AFHTTPResponseSerializer *serializer    = manager.responseSerializer;

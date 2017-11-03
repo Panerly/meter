@@ -41,6 +41,8 @@ WYLineChartViewDatasource
 
     [self initShareBtn];
     
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
 //    UIButton *saveBtn             = [[UIButton alloc] initWithFrame:CGRectMake(20, PanScreenHeight - 49 - 20, 100, 35)];
 //    saveBtn.backgroundColor       = [UIColor colorWithRed:121/255.0f green:180/255.0f blue:76/255.0f alpha:1];
 //    saveBtn.layer.cornerRadius    = 10;

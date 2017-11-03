@@ -11,7 +11,9 @@
 #import "FirstCollectionViewController.h"
 #import "CurrentReceiveViewController.h"
 
+
 @implementation CurrentReceiveTableViewCell
+
 
 - (void)awakeFromNib {
     [super awakeFromNib];
@@ -117,8 +119,10 @@
     return nil;
 }
 - (IBAction)scenePhotos:(id)sender {
+    
     FirstCollectionViewController *showImageVC = [[FirstCollectionViewController alloc] init];
     [[self findVC].navigationController showViewController:showImageVC sender:nil];
+    
 }
 
 

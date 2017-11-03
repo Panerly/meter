@@ -30,7 +30,6 @@ KZVideoViewControllerDelegate
     NSString *x;
     NSString *y;
 }
-
 @property (nonatomic, strong) NSURL *videoURL;
 
 @property (nonatomic, strong) NSURL *gifURL;
@@ -38,7 +37,6 @@ KZVideoViewControllerDelegate
 @property (nonatomic, strong) CLLocationManager* locationManager;
 
 @property (nonatomic, strong) KZEyeView *showViews;
-
 @end
 
 @implementation RepairDetailVC
@@ -53,6 +51,9 @@ KZVideoViewControllerDelegate
     
     //定位
     [self orientate];
+    
+    UIBarButtonItem *changeMeter = [[UIBarButtonItem alloc] initWithTitle:@"换表" style:UIBarButtonItemStylePlain target:self action:@selector(checkValue)];
+    self.navigationItem.rightBarButtonItem = changeMeter;
 }
 #pragma mark - 键盘通知
 - (void)addNoticeForKeyboard {
@@ -228,7 +229,7 @@ KZVideoViewControllerDelegate
     _repairedReasonTextField.borderStyle = UITextBorderStyleRoundedRect;
     _repairedReasonTextField.placeholder = @"请输入维修原因";
     
-    _repairedNumStr.text        = @"修正后读数:";
+    _repairedNumStr.text        = @"水 表  读 数:";
     _repairedNumStr.textColor   = [UIColor whiteColor];
     
     _repairedReasonLabel.text   = @"维 修  原 因:";
@@ -327,21 +328,21 @@ KZVideoViewControllerDelegate
     [_resetBtn mas_makeConstraints:^(MASConstraintMaker *make) {
        
         make.left.equalTo(weakSelf.view.mas_left).with.offset(20);
-        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-20);
+        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-10);
         make.size.equalTo(CGSizeMake(PanScreenWidth/4, PanScreenWidth/8));
     }];
     
     [_delayBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         
         make.centerX.equalTo(weakSelf.view.centerX);
-        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-20);
+        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-10);
         make.size.equalTo(CGSizeMake(PanScreenWidth/4, PanScreenWidth/8));
     }];
     
     [_uploadBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         
         make.right.equalTo(weakSelf.view.mas_right).with.offset(-20);
-        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-20);
+        make.bottom.equalTo(weakSelf.view.mas_bottom).with.offset(-10);
         make.size.equalTo(CGSizeMake(PanScreenWidth/4, PanScreenWidth/8));
     }];
     
@@ -724,6 +725,7 @@ KZVideoViewControllerDelegate
     [formatter setDateFormat:@"yyyy-MM-dd hh:mm:ss"];
     NSString *currentTime      = [formatter stringFromDate:[NSDate date]];
     
+    
     NSDictionary *paraDic = @{
                               @"user_name":self.user_id,
                               @"reason":_repairedReasonTextField.text?_repairedReasonTextField.text:_repairReason.text,
@@ -735,7 +737,8 @@ KZVideoViewControllerDelegate
                               @"remarks":_remarksTextView.text?_remarksTextView.text:@"",
                               @"fix_number":_repairedNumTextField.text?_repairedNumTextField.text:@"",
                               @"repairMan":[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"],
-                              @"uploadTime":currentTime
+                              @"uploadTime":currentTime,
+                              @"type":self.type
                               };
     NSError *error;
     NSData *dataPara     = [NSJSONSerialization dataWithJSONObject:paraDic options:NSJSONWritingPrettyPrinted error:&error];
@@ -803,7 +806,156 @@ KZVideoViewControllerDelegate
     _showViews.hidden = YES;
 }
 
+#pragma mark - 换表流程
+//换表流程
+- (void)changeMeterAction {
+    
+    UIAlertController *alertSheet = [UIAlertController alertControllerWithTitle:@"请选择换表方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    __weak typeof(self) weakSelf = self;
+    UIAlertAction *changeMeter = [UIAlertAction actionWithTitle:@"换表流程" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [weakSelf changeMeter:@"0"];
+    }];
+    UIAlertAction *dig = [UIAlertAction actionWithTitle:@"开挖流程" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        [weakSelf changeMeter:@"1"];
+    }];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        
+    }];
+    [alertSheet addAction:changeMeter];
+    [alertSheet addAction:dig];
+    [alertSheet addAction:cancel];
+    [self presentViewController:alertSheet animated:YES completion:^{
+        
+    }];
+}
 
+//检查
+- (void)checkValue {
+    
+    //check item is null
+    UIAlertAction *confirm = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        
+    }];
+    NSString *message = @"请检查，部分参数为空！";
+    
+    
+    if ([_repairedReasonTextField.text isEqualToString:@""]) {
+        
+        message = @"请输入维修原因";
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"参数不能为空" message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:confirm];
+        [self presentViewController:alert animated:YES completion:^{
+            
+        }];
+    }else if ([_repairedNumTextField.text isEqualToString:@""]){
+        
+        message = @"请输入读数";
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"参数不能为空" message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:confirm];
+        [self presentViewController:alert animated:YES completion:^{
+            
+        }];
+    }else{
+        
+        [self changeMeterAction];
+    }
+}
+
+- (void)changeMeter :(NSString *)bs{
+    
+    [AnimationView showInView:self.view];
+    
+    progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, PanScreenHeight/2 + 10, PanScreenWidth, 40)];
+    progressLabel.text = @"正在上传，请稍后...";
+    progressLabel.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:progressLabel];
+    
+    NSString *ip = [[NSUserDefaults standardUserDefaults] objectForKey:@"ip"];
+    
+    NSString *uploadVideoUrl                  = [NSString stringWithFormat:@"http://%@/Meter_Reading/HuanBiaoServlet",ip];
+    
+    NSURLSessionConfiguration *config   = [NSURLSessionConfiguration defaultSessionConfiguration];
+    
+    AFHTTPSessionManager *manager       = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:config];
+    
+    manager.requestSerializer.timeoutInterval = 10;
+    
+    AFHTTPResponseSerializer *serializer    = manager.responseSerializer;
+    
+    serializer.acceptableContentTypes       = [serializer.acceptableContentTypes setByAddingObject:@"text/html"];
+    
+    
+    __weak typeof(self) weakSelf            = self;
+    if (_videoModel.videoAbsolutePath) {
+        
+        self.videoURL = [NSURL fileURLWithPath:_videoModel.videoAbsolutePath];
+    }
+    
+    NSDictionary *parameters = @{
+                                 @"bs"          :bs,
+                                 @"kj"          :self.kj,
+                                 @"type"        :self.type,
+                                 @"diZhi"       :self.user_addr,
+                                 @"huHao"       :self.user_id,
+                                 @"huMing"      :self.user_name,
+                                 @"biaoHao"     :self.bsh,
+                                 @"yuanYin"     :self.repairedReasonTextField.text,
+                                 @"jiuBiaoCJ"   :self.jiuBiaoCJ,
+                                 @"jiuBiaoChaiMa":self.repairedNumTextField.text
+                                 };
+    NSError *error;
+    NSData *dataPara     = [NSJSONSerialization dataWithJSONObject:parameters options:NSJSONWritingPrettyPrinted error:&error];
+    NSString *jsonString = [[NSString alloc] initWithData:dataPara encoding:NSUTF8StringEncoding];
+    
+    NSDictionary *para = @{
+                           @"a":jsonString
+                           };
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyyMMddhhmmss"];
+    NSString *currentTime      = [formatter stringFromDate:[NSDate date]];
+    
+    [manager POST:uploadVideoUrl parameters:para constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+        
+        if (!_videoModel && imgView.image) {
+            
+            NSData *imgData = UIImageJPEGRepresentation(imgView.image, 1);
+            [formData appendPartWithFileData:imgData name:@"msg" fileName:[NSString stringWithFormat:@"%@.jpg", currentTime] mimeType:@"jpg"];
+        }else if(_videoModel){
+            
+            [formData appendPartWithFileURL:weakSelf.videoURL name:@"video" fileName:[NSString stringWithFormat:@"%@.mp4", currentTime] mimeType:@"mp4" error:nil];
+        }else{
+            
+            UIImage *img = [UIImage imageNamed:@"pic"];
+            NSData *imgData = UIImageJPEGRepresentation(img, 1);
+            [formData appendPartWithFileData:imgData name:@"video" fileName:[NSString stringWithFormat:@"123.png"] mimeType:@"png"];
+        }
+        
+    } progress:^(NSProgress * _Nonnull uploadProgress) {
+        //        if (uploadProgress.totalUnitCount == uploadProgress.completedUnitCount) {
+        //            [SCToastView hideInView:weakSelf.view];
+        //        }else {
+        //
+        //            [SCToastView showInView:weakSelf.view text:[NSString stringWithFormat:@"已上传：%lld",uploadProgress.completedUnitCount] duration:0 autoHide:NO];
+        //        }
+        progressLabel.text = [NSString stringWithFormat:@"正在上传：%lld％", uploadProgress.completedUnitCount/uploadProgress.totalUnitCount*100];
+        
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [AnimationView dismiss];
+        progressLabel.hidden = YES;
+        [SCToastView showInView:weakSelf.view text:[NSString stringWithFormat:@"换表成功，即将退出"] duration:1 autoHide:YES];
+        sleep(1);
+        [weakSelf.navigationController popViewControllerAnimated:YES];
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+       
+        [AnimationView dismiss];
+        progressLabel.hidden = YES;
+        [SCToastView showInView:weakSelf.view text:[NSString stringWithFormat:@"上传失败：%@",error] duration:5 autoHide:YES];
+    }];
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

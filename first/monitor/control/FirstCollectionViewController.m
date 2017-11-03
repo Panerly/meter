@@ -36,16 +36,20 @@ static NSString * const reuseIdentifier = @"CollectionCell";
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
-    self.navigationController.delegate = self;
-    [MLTransition invalidate];
-    [self.navigationController setDelegate:self];
-    [self.interactive attachInteractiveGestureToNavigationController:self.navigationController];
     
+    [MLTransition invalidate];
+    
+    self.navigationController.delegate = self;
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
+    [self.interactive attachInteractiveGestureToNavigationController:self.navigationController];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
+    
     [self.interactive detachInteractiveGesture];
 }
 
@@ -53,13 +57,16 @@ static NSString * const reuseIdentifier = @"CollectionCell";
     [super viewDidLoad];
     
     _interactive = [[AMWaveTransition alloc] init];
+    
     [SCToastView showInView:self.view text:@"测试数据" duration:1 autoHide:YES];
 }
 
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
+    
     if (self.view.window == nil && [self isViewLoaded]) {
+        
         self.view = nil;
     }
 }
@@ -72,12 +79,17 @@ static NSString * const reuseIdentifier = @"CollectionCell";
     
     
     if (operation != UINavigationControllerOperationNone) {
+        
         return [AMWaveTransition transitionWithOperation:operation];
     }
+    
     if ([toVC isKindOfClass:[SecondViewController class]]) {
+        
         MagicMoveTransition *transition = [[MagicMoveTransition alloc]init];
+        
         return transition;
     }else{
+        
         return nil;
     }
 }

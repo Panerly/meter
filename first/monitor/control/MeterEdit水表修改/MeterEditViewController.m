@@ -44,6 +44,8 @@ static int i = 0;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
     self.view.backgroundColor = [UIColor whiteColor];
     self.title = changeLabel;
     
@@ -61,6 +63,7 @@ static int i = 0;
     [self _configScrollView];
     
     [self _requestData];
+    
     
     _dataArr = [NSMutableArray array];
 

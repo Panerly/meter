@@ -61,7 +61,7 @@
 - (void)_createVersion {
     
     UIButton *versionBtn = [[UIButton alloc] initWithFrame:CGRectMake((PanScreenWidth-200)/2, PanScreenHeight - 49 -50, 200, 40)];
-    [versionBtn setTitle:@"版本：V1.4.0" forState:UIControlStateNormal];
+    [versionBtn setTitle:@"版本：V1.5.0" forState:UIControlStateNormal];
     [versionBtn setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
     [versionBtn.titleLabel setFont:[UIFont systemFontOfSize:13]];
     [versionBtn addTarget:self action:@selector(versionAction) forControlEvents:UIControlEventTouchUpInside];
@@ -263,7 +263,7 @@
         
         if (fileSize/1024.0/1024.0 > 0) {
             
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"是否清理缓存？" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"是否清理缓存？" message:@"将删除本地数据库信息以及缓存图片" preferredStyle:UIAlertControllerStyleAlert];
             
             UIAlertAction *cancel = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:nil];
             
@@ -276,7 +276,23 @@
                 
                 [self.tableView reloadData];
                 
-                [SCToastView showInView:self.view text:@"已清理" duration:.5f autoHide:YES];
+                NSString *doc = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];;
+                NSString *fileName = [doc stringByAppendingPathComponent:@"meter.sqlite"];
+                
+                FMDatabase *db = [FMDatabase databaseWithPath:fileName];
+                
+                if ([db open]) {
+                    
+                    BOOL deleteDB = [db executeUpdate:@"delete from Reading_now"];
+                    BOOL deleteArea = [db executeUpdate:@"delete from Area_data"];
+                    
+                    if (deleteDB && deleteArea) {
+                        
+                        NSLog(@"已删除本地数据库缓存信息");
+                    }
+                }
+                
+                [SCToastView showInView:self.view text:@"已清理图片缓存以及本地库信息" duration:.5f autoHide:YES];
             }];
             
             [alert addAction:cancel];
@@ -333,6 +349,8 @@
 //        
 //    }
 }
+
+
 - (void)logOut {
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];

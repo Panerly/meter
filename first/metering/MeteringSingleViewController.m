@@ -41,8 +41,12 @@ UISearchBarDelegate
     
     
     [self _createTableView];
+    
     [self getDataFromDB];
+    
     isDone = NO;
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
 }
 
 - (void)getCompleteNum {

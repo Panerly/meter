@@ -44,8 +44,7 @@
     
     [self _setValue];
     
-    
-    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"icon_bg.png"]];
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
     
     _interactive = [[AMWaveTransition alloc] init];
     

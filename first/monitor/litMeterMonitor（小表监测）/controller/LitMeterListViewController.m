@@ -322,7 +322,9 @@ UISearchResultsUpdating
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
     LitMeterDetailListViewController *detail = [[LitMeterDetailListViewController alloc] init];
     if (isNormal) {
         detail.village_name = (!self.searchController.active)?((LitMeterModel *)_dataArray[indexPath.row]).small_name:((LitMeterModel *)_searchResults[indexPath.row]).small_name;

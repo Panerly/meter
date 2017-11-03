@@ -30,5 +30,11 @@
 @property(nonatomic, copy) NSString<Optional> *big_fac;       //大表厂商代码
 @property(nonatomic, copy) NSString<Optional> *small_fac;     //小表厂商代码
 @property(nonatomic, copy) NSString<Optional> *spotCondition; //现场状况*/
+@property(nonatomic, copy) NSString<Optional> *type;          //0：人工报修 1:抄表报修 2:外复报修 9：无用的
+
+//换表新加的
+@property(nonatomic, copy) NSString<Optional> *kj;       //口径
+@property(nonatomic, copy) NSString<Optional> *user_name;//户名
+
 
 @end

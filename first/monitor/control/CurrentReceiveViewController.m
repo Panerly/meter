@@ -630,15 +630,20 @@ UIScrollViewDelegate
     if ([self.title isEqualToString:@"历史抄见"]) {
         
         HisDetailViewController *hisDetailVC = [[HisDetailViewController alloc] init];
+        
         hisDetailVC.hidesBottomBarWhenPushed = YES;
+        
         hisDetailVC.hisDetailModel = (!self.searchController.active)?_dataArr[indexPath.row] : _searchResults[indexPath.row];
+        
         [self.navigationController showViewController:hisDetailVC sender:nil];
     }
     
     if ([self.title isEqualToString:@"水表修改"]) {
         
         MeterEditViewController *editDetailVC = [[MeterEditViewController alloc] init];
+        
         editDetailVC.meter_id = (!self.searchController.active)?((CRModel *)_dataArr[indexPath.row]).meter_id : ((CRModel *)self.searchResults[indexPath.row]).meter_id;
+        
         [self.navigationController showViewController:editDetailVC sender:nil];
     }
 }
@@ -650,17 +655,21 @@ UIScrollViewDelegate
 {
     
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"选择导航方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    
     UIAlertAction *baidu = [UIAlertAction actionWithTitle:@"高德导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         
         [self openGaoDeMapX:x Y:y];
     }];
+    
     UIAlertAction *apple = [UIAlertAction actionWithTitle:@"苹果自带导航" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         
         [self openAppleMapX:x Y:y];
     }];
+    
     UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         
     }];
+    
     [alert addAction:baidu];
     [alert addAction:apple];
     [alert addAction:cancel];

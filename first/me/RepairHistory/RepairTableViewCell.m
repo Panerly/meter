@@ -41,12 +41,15 @@
     _repair_name.text = [NSString stringWithFormat:@"用户地址：%@", self.repairHisModel.user_addr];
     _alertTime.text = [NSString stringWithFormat:@"%@", self.repairHisModel.give_date];
     
-    if ([self.repairHisModel.stage isEqualToString:@"未处理"]) {
+    if ([self.repairHisModel.stage isEqualToString:@"未处理"] || [self.repairHisModel.stage isEqualToString:@"已下达"]) {
         
         _statueView.image = [UIImage imageNamed:@"icon_uncomplete"];
     }else if ([self.repairHisModel.stage isEqualToString:@"协助中"]){
         
         _statueView.image = [UIImage imageNamed:@"icon_fac_help"];
+    }else if([self.repairHisModel.stage isEqualToString:@"换表中"] || [self.repairHisModel.stage isEqualToString:@"开挖中"]){
+        
+        _statueView.image = [UIImage imageNamed:@"icon_changing"];
     }else{
         
         _statueView.image = [UIImage imageNamed:@"icon_complete"];

@@ -167,6 +167,38 @@ static BOOL flashIsOn;
     [db close];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    [self createDB];
+    if ([self.db open]) {
+        
+        FMResultSet *restultSet = [self.db executeQuery:@"SELECT * FROM Area_data where s_bookNo is not '00' order by id"];
+        if (_dataArr) {
+            
+            [_dataArr removeAllObjects];
+        }else {
+            
+            _dataArr = [NSMutableArray array];
+            [_dataArr removeAllObjects];
+        }
+        
+        while ([restultSet next]) {
+            
+            NSString *install_addr     = [restultSet stringForColumn:@"s_bookName"];
+            NSString *s_bookNo         = [restultSet stringForColumn:@"s_bookNo"];
+            
+            MeterInfoModel *meterinfoModel  = [[MeterInfoModel alloc] init];
+            meterinfoModel.s_DiZhi     = install_addr;
+            meterinfoModel.s_bookNo    = s_bookNo;
+            [_dataArr addObject:meterinfoModel];
+        }
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+    }
+    [self.db close];
+    [self.tableView.mj_header endRefreshing];
+}
+
 /**
  *  监测网络连接请求 网络 或 本地 数据
  */

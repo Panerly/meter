@@ -61,6 +61,8 @@ UISearchBarDelegate
     
     [self.view addSubview:_nomoreLabel];
     
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    
     [self initTableView];
     
     //[self initRightBarItem];
@@ -112,7 +114,7 @@ UISearchBarDelegate
     
     if (!_tableView) {
         
-        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 64, PanScreenWidth, PanScreenHeight - 64) style:UITableViewStylePlain];
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, PanScreenWidth, PanScreenHeight) style:UITableViewStylePlain];
         
         _tableView.backgroundColor  = [UIColor clearColor];
         _tableView.separatorStyle   = UITableViewCellSeparatorStyleNone;
@@ -191,12 +193,19 @@ UISearchBarDelegate
                 [self.dataArr addObject:model];
                 
             }
-            
+            if (self.dataArr.count>0) {
+                
+                _nomoreLabel.hidden = YES;
+            }else{
+                _nomoreLabel.text = @"暂无数据";
+                _nomoreLabel.hidden = NO;
+            }
             [weakSelf.tableView reloadData];
             [weakSelf starAnimationWithTableView:weakSelf.tableView];
             
         }else {
-            
+            _nomoreLabel.text = @"暂无数据";
+            _nomoreLabel.hidden = NO;
             [_tableView.mj_header endRefreshing];
             UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"提示" message:@"暂无数据" preferredStyle:UIAlertControllerStyleAlert];
             
@@ -214,6 +223,8 @@ UISearchBarDelegate
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         
 //        [SVProgressHUD showErrorWithStatus:@"加载失败"];
+        _nomoreLabel.hidden = NO;
+        _nomoreLabel.text = @"请求失败";
         [_tableView.mj_header endRefreshing];
         UIAlertController *alertVC  = [UIAlertController alertControllerWithTitle:@"连接失败" message:[NSString stringWithFormat:@"%@", error.localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
         
@@ -236,6 +247,26 @@ UISearchBarDelegate
 }
 
 #pragma mark - UITableViewDelegate & UITableViewDataSourse
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    
+    //scrollView已经有拖拽手势，直接拿到scrollView的拖拽手势
+    UIPanGestureRecognizer *pan = scrollView.panGestureRecognizer;
+    //获取到拖拽的速度 >0 向下拖动 <0 向上拖动
+    CGFloat velocity = [pan velocityInView:scrollView].y;
+    
+    if (velocity <- 5) {
+        //向上拖动，隐藏导航栏
+        [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }else if (velocity > 5) {
+        //向下拖动，显示导航栏
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
+    }else if(velocity == 0){
+        //停止拖拽
+    }
+    [self.searchController.searchBar resignFirstResponder];
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     
     return (!self.searchController.active)?self.dataArr.count : self.searchResults.count;
@@ -291,11 +322,6 @@ UISearchBarDelegate
 }
 
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    
-    [self.searchController.searchBar resignFirstResponder];
-}
-
 #pragma mark - 提交厂家操作
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -325,11 +351,13 @@ UISearchBarDelegate
         
         manager.requestSerializer.timeoutInterval = 10;
         NSString *user_id_str = ((RepairHistModel *)weakSelf.dataArr[indexPath.row]).user_id;
+        NSString *type = ((RepairHistModel *)weakSelf.dataArr[indexPath.row]).type;
         NSDictionary *parameters = @{
                                      @"spot":arr[0],
                                      @"repair_name":[[NSUserDefaults standardUserDefaults] objectForKey:@"userName"],
                                      @"user_id":user_id_str,
-                                     @"upload_time":currentTime
+                                     @"upload_time":currentTime,
+                                     @"type":type
                                      };
         
         AFHTTPResponseSerializer *serializer    = manager.responseSerializer;
@@ -405,7 +433,11 @@ UISearchBarDelegate
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
     RepairDetailVC *repairDetailVC = [[RepairDetailVC alloc] init];
     RecordVC *recordVC = [[RecordVC alloc] init];
     
@@ -422,17 +454,56 @@ UISearchBarDelegate
     }else{//维修人员
         
         flag = [((RepairHistModel *)_dataArr[indexPath.row]).stage isEqualToString:@"未处理"]?NO:YES;
+        
+        if ([((RepairHistModel *)_dataArr[indexPath.row]).stage isEqualToString:@"未处理"]) {
+            
+            flag = NO;
+            
+        }else if ([((RepairHistModel *)_dataArr[indexPath.row]).stage isEqualToString:@"已下达"]){
+            
+            flag = NO;
+            
+        }else if ([((RepairHistModel *)_dataArr[indexPath.row]).stage isEqualToString:@"换表中"]){
+            
+            flag = NO;
+            
+        }else if ([((RepairHistModel *)_dataArr[indexPath.row]).stage isEqualToString:@"开挖中"]){
+            
+            flag = NO;
+            
+        }else{//其他状态进入时间线
+            
+            flag = YES;
+        }
     }
     recordVC.flag = flag;
-    
-    repairDetailVC.user_id = ((RepairHistModel *)_dataArr[indexPath.row]).user_id;
-    repairDetailVC.appearance = ((RepairHistModel *)_dataArr[indexPath.row]).appearance;
-    repairDetailVC.stage = ((RepairHistModel *)_dataArr[indexPath.row]).stage;
-    repairDetailVC.alert_time = ((RepairHistModel *)_dataArr[indexPath.row]).give_date;
-    repairDetailVC.bsh = ((RepairHistModel *)_dataArr[indexPath.row]).bsh;
-    repairDetailVC.repair_name = ((RepairHistModel *)_dataArr[indexPath.row]).repair_name;
-    repairDetailVC.user_addr = ((RepairHistModel *)_dataArr[indexPath.row]).user_addr;
+    //用户号--》户号
+    repairDetailVC.user_id      = ((RepairHistModel *)_dataArr[indexPath.row]).user_id;
+    repairDetailVC.appearance   = ((RepairHistModel *)_dataArr[indexPath.row]).appearance;
+    repairDetailVC.stage        = ((RepairHistModel *)_dataArr[indexPath.row]).stage;
+    repairDetailVC.alert_time   = ((RepairHistModel *)_dataArr[indexPath.row]).give_date;
+    //表身号--》水表钢印号
+    repairDetailVC.bsh          = ((RepairHistModel *)_dataArr[indexPath.row]).bsh;
+    repairDetailVC.repair_name  = ((RepairHistModel *)_dataArr[indexPath.row]).repair_name;
+    //用户地址--》地址
+    repairDetailVC.user_addr    = ((RepairHistModel *)_dataArr[indexPath.row]).user_addr;
     repairDetailVC.spotCondition = ((RepairHistModel *)_dataArr[indexPath.row]).spotCondition;
+    repairDetailVC.type = ((RepairHistModel *)_dataArr[indexPath.row]).type;
+    //--》口径
+    repairDetailVC.kj   = ((RepairHistModel *)_dataArr[indexPath.row]).kj;
+    //--》户名
+    repairDetailVC.user_name = ((RepairHistModel *)_dataArr[indexPath.row]).user_name;
+    //--》厂家
+    if (![((RepairHistModel *)_dataArr[indexPath.row]).big_fac isEqualToString:@""]) {
+        
+        repairDetailVC.jiuBiaoCJ = ((RepairHistModel *)_dataArr[indexPath.row]).big_fac;
+    }else if (![((RepairHistModel *)_dataArr[indexPath.row]).small_fac isEqualToString:@""]){
+        
+        repairDetailVC.jiuBiaoCJ = ((RepairHistModel *)_dataArr[indexPath.row]).small_fac;
+    }else{
+        
+        repairDetailVC.jiuBiaoCJ = @"";
+    }
     
     recordVC.user_id = ((RepairHistModel *)_dataArr[indexPath.row]).user_id;
     

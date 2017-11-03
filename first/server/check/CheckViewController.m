@@ -328,6 +328,8 @@ MycellDelegate
      //水量平均
      @property (nonatomic, strong) NSString<Optional> *i_ShuiLiang_pingjun;
      */
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
     CheckDetailVC *checkDetail = [[CheckDetailVC alloc] init];
     checkDetail.averageNumStr = ((CheckModel *)_dataArr[indexPath.row]).i_ShuiLiang_pingjun;
     checkDetail.previousNumStr = ((CheckModel *)_dataArr[indexPath.row]).i_ChaoMa_SC;

@@ -156,6 +156,7 @@ UITextFieldDelegate
 //    }
 //}
 
+#pragma mark - 报修
 //报修
 - (IBAction)reportButton:(id)sender {
     self.inputView.titleLable.text = @"报修信息";

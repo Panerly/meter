@@ -40,6 +40,8 @@ static CGFloat i = 0;
     
     self.xArr = [NSMutableArray array];
     self.yArr = [NSMutableArray array];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
 }
 
 - (void)viewWillAppear:(BOOL)animated

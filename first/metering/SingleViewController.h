@@ -68,6 +68,10 @@ CLLocationManagerDelegate
 
 @property (nonatomic, strong) NSString *collect_area;
 
+@property (nonatomic, strong) NSString *i_caliber;
+
+@property (nonatomic, strong) NSString *s_ShuiBiaoGYH;
+
 #pragma mark - 测试第二版样张
 //用户名
 //@property (weak, nonatomic) IBOutlet UILabel *userName;

@@ -50,6 +50,8 @@ UISearchBarDelegate
     [self initTableView];
     
     [self requestData];
+    
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
 }
 - (void)ReturnTextBlock:(ReturnTextBlock)block {
     
@@ -284,6 +286,7 @@ UISearchBarDelegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
     LitMeterDetailViewController *detailVC = [[LitMeterDetailViewController alloc] init];
     
     if (![_isNormal isEqualToString:@"正常"]) {
